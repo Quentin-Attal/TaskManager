@@ -7,24 +7,17 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Auth.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService(IUserRepository repo, IRefreshTokenRepository repoToken, ITokenService tokenService) : IAuthService
     {
-        private readonly IUserRepository _repo;
-        private readonly IRefreshTokenRepository _repoToken;
-        private readonly ITokenService _tokenService;
+        private readonly IUserRepository _repo = repo;
+        private readonly IRefreshTokenRepository _repoToken = repoToken;
+        private readonly ITokenService _tokenService = tokenService;
 
         private readonly PasswordHasher<AppUser> _hasher = new();
 
-        public AuthService(IUserRepository repo, IRefreshTokenRepository repoToken, ITokenService tokenService)
-        {
-            _repo = repo;
-            _repoToken = repoToken;
-            _tokenService = tokenService;
-        }
-
         public async Task<AuthLoginResult?> LoginAsync(LoginRequest request, AuthRequestContext context, CancellationToken ct)
         {
-            var email = NormalizeEmail(request.Email);
+            _ = NormalizeEmail(request.Email);
             var user = await _repo.GetByEmailAsync(request.Email, ct);
             if (user == null)
             {
@@ -123,7 +116,7 @@ namespace Application.Auth.Services
             );
         }
 
-        private async Task RevokeAllUserRefreshTokens(Guid userId)
+        private static async Task RevokeAllUserRefreshTokens(Guid userId)
         {
 
         }

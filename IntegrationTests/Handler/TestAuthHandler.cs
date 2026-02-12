@@ -7,15 +7,12 @@ using System.Text.Encodings.Web;
 namespace IntegrationTests.Handler
 {
 
-    public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public sealed class TestAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
     {
         public const string SchemeName = "Test";
-
-        public TestAuthHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder)
-            : base(options, logger, encoder) { }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {

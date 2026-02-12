@@ -39,7 +39,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         builder.ConfigureServices(services =>
         {
             // Remove the production DbContext registration
-            services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
 
             // Register DbContext pointing to container Postgres
             services.AddDbContext<AppDbContext>(options =>
@@ -69,7 +69,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = new[] { "public" }
+            SchemasToInclude = ["public"]
         });
     }
 

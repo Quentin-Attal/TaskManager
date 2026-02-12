@@ -39,7 +39,7 @@ namespace Infrastructure.Auth.Services
 
         public string CreateAccessToken(AppUser user)
         {
-            if (user is null) throw new ArgumentNullException(nameof(user));
+            ArgumentNullException.ThrowIfNull(user);
             if (user.Id == Guid.Empty) throw new ArgumentException("User.Id is required.", nameof(user));
 
             var now = DateTime.UtcNow;

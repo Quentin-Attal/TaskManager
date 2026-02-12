@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class TaskRepository : ITaskRepository
+    public class TaskRepository(AppDbContext context) : ITaskRepository
     {
-        private readonly AppDbContext _context;
-
-        public TaskRepository(AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context = context;
 
         public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
         {

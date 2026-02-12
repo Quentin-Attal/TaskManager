@@ -8,17 +8,11 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController(AppDbContext db, IConfiguration config) : ControllerBase
     {
-        private readonly AppDbContext _db;
-        private readonly IConfiguration _config;
+        private readonly AppDbContext _db = db;
+        private readonly IConfiguration _config = config;
         private readonly PasswordHasher<AppUser> _hasher = new();
-
-        public AuthController(AppDbContext db, IConfiguration config)
-        {
-            _db = db;
-            _config = config;
-        }
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
@@ -37,7 +31,7 @@ namespace API.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
-            var refreshPlain = Request.Cookies["refresh_token"];
+            _ = Request.Cookies["refresh_token"];
 
 
             Response.Cookies.Delete("refresh_token");

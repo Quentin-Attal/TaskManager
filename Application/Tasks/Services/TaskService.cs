@@ -4,14 +4,9 @@ using Domain.Entities;
 
 namespace Application.Tasks.Services
 {
-    public class TaskService : ITaskService
+    public class TaskService(ITaskRepository repo) : ITaskService
     {
-        private readonly ITaskRepository _repo;
-
-        public TaskService(ITaskRepository repo)
-        {
-            _repo = repo;
-        }
+        private readonly ITaskRepository _repo = repo;
 
         public Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
             => _repo.GetAllAsync(userId, ct);

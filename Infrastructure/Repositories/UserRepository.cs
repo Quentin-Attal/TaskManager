@@ -7,14 +7,9 @@ using System.Text;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository(AppDbContext context) : IUserRepository
     {
-        private readonly AppDbContext _context;
-
-        public UserRepository(AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context = context;
 
         public async Task AddAsync(AppUser user, CancellationToken ct)
         {
@@ -23,7 +18,7 @@ namespace Infrastructure.Repositories
 
         public async Task<AppUser?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            return await _context.Users.FindAsync(id, ct);
+            return await _context.Users.FindAsync(new object?[] { id, ct }, cancellationToken: ct);
         }
         public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct)
         {

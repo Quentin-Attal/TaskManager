@@ -94,7 +94,7 @@ namespace IntegrationTests
         public async Task PUT_Task_Should_Return_200()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-            var createTaskRequest = new CreateTaskRequest { Title = "title" };
+            _ = new CreateTaskRequest { Title = "title" };
             var response = await _client.PutAsJsonAsync("/api/tasks/" + _taskId, new object(), cancellationToken: cancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -113,7 +113,7 @@ namespace IntegrationTests
         public async Task Delete_Task_Should_Return_200()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-            var createTaskRequest = new CreateTaskRequest { Title = "title" };
+            _ = new CreateTaskRequest { Title = "title" };
             var response = await _client.DeleteAsync("/api/tasks/" + _taskId, cancellationToken: cancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);

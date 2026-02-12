@@ -7,14 +7,9 @@ using System.Text;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class RefreshTokenRepository : IRefreshTokenRepository
+    public sealed class RefreshTokenRepository(AppDbContext db) : IRefreshTokenRepository
     {
-        private readonly AppDbContext _db;
-
-        public RefreshTokenRepository(AppDbContext db)
-        {
-            _db = db;
-        }
+        private readonly AppDbContext _db = db;
 
         public Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct)
         {

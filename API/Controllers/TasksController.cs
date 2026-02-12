@@ -11,14 +11,9 @@ namespace API.Controllers
     [Authorize]
     [ApiController]
     [Route("api/tasks")]
-    public class TasksController : ControllerBase
+    public class TasksController(ITaskService service) : ControllerBase
     {
-        private readonly ITaskService _service;
-
-        public TasksController(ITaskService service)
-        {
-            _service = service;
-        }
+        private readonly ITaskService _service = service;
 
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken ct)

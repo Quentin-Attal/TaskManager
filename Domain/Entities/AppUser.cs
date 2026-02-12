@@ -11,7 +11,7 @@ namespace Domain.Entities
         public string PasswordHash { get; set; } = default!;
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
-        public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
-        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<TaskItem> Tasks { get; set; } = [];
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     }
 }
