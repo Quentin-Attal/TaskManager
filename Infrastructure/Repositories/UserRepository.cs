@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository: IUserRepository
+    public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
 
@@ -25,7 +25,8 @@ namespace Infrastructure.Repositories
         {
             return await _context.Users.FindAsync(id, ct);
         }
-        public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct) { 
+        public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct)
+        {
             return await _context.Users.SingleOrDefaultAsync(u => u.Email == email, ct);
         }
 
@@ -38,7 +39,7 @@ namespace Infrastructure.Repositories
 
         public Task UpdateAsync(AppUser user)
         {
-            _context.Users.Update(user); 
+            _context.Users.Update(user);
             return Task.CompletedTask;
         }
 

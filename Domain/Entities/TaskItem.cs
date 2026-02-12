@@ -7,6 +7,6 @@ public class TaskItem
     public bool IsDone { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public Guid UserId { get; set; }
-    
+
     public AppUser? AppUser { get; set; }
 }

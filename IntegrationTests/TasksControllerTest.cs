@@ -9,7 +9,7 @@ using System.Net.Http.Json;
 
 namespace IntegrationTests
 {
-    public class TasksControllerTest: IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
+    public class TasksControllerTest : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
     {
         private readonly HttpClient _client;
         private readonly CustomWebApplicationFactory _factory;
@@ -38,10 +38,10 @@ namespace IntegrationTests
                 CreatedAtUtc = DateTime.UtcNow,
                 IsDone = false,
                 AppUser = new AppUser
-                { 
-                    Id  = _userId,
-                    Email = "mail.com", 
-                    PasswordHash = "hash", 
+                {
+                    Id = _userId,
+                    Email = "mail.com",
+                    PasswordHash = "hash",
                     CreatedAtUtc = DateTime.UtcNow,
                 },
             });

@@ -125,7 +125,7 @@ namespace Application.Auth.Services
 
         private async Task RevokeAllUserRefreshTokens(Guid userId)
         {
-            
+
         }
 
         private static string NormalizeEmail(string email) => (email ?? string.Empty).Trim().ToLowerInvariant();

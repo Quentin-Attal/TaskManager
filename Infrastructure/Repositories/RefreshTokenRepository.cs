@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class RefreshTokenRepository: IRefreshTokenRepository
+    public sealed class RefreshTokenRepository : IRefreshTokenRepository
     {
         private readonly AppDbContext _db;
 
@@ -27,7 +27,8 @@ namespace Infrastructure.Repositories
         {
             await _db.RefreshTokens.AddAsync(token, ct);
         }
-        public Task<RefreshToken?> GetByUserId(Guid id) { 
+        public Task<RefreshToken?> GetByUserId(Guid id)
+        {
             return _db.RefreshTokens
                 .Include(rt => rt.User)
                 .SingleOrDefaultAsync(rt => rt.UserId == id);
