@@ -1,0 +1,28 @@
+{
+  "name": "taskmanager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install",
+    "test:unit": "dotnet test ./UnitTests -c Release",
+    "test:integration": "dotnet test ./IntegrationTests -c Release",
+    "test:all": "dotnet build -c Release && npm run test:unit && npm run test:integration"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Quentin-Attal/TaskManager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Quentin-Attal/TaskManager/issues"
+  },
+  "homepage": "https://github.com/Quentin-Attal/TaskManager#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

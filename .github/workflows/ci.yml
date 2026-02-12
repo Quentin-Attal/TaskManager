@@ -1,0 +1,40 @@
+name: CI (.NET)
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build_test_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x" 
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Restore dotnet tools (dotnet-format)
+        run: dotnet tool restore
+
+      - name: dotnet format check (no changes allowed)
+        run: dotnet format --verify-no-changes --severity info
+
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test ./UnitTests --configuration Release --no-build --verbosity normal
+
+      - name: Integration tests
+        run: dotnet test ./IntegrationTests --configuration Release --no-build --verbosity normal
