@@ -118,7 +118,7 @@ namespace Application.Auth.Services
 
         private static async Task RevokeAllUserRefreshTokens(Guid userId)
         {
-
+            throw new NotImplementedException();
         }
 
         private static string NormalizeEmail(string email) => (email ?? string.Empty).Trim().ToLowerInvariant();

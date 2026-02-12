@@ -31,11 +31,13 @@ namespace API.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
-            _ = Request.Cookies["refresh_token"];
+            throw new NotImplementedException();
+
+            //_ = Request.Cookies["refresh_token"];
 
 
-            Response.Cookies.Delete("refresh_token");
-            return Ok();
+            //Response.Cookies.Delete("refresh_token");
+            //return Ok();
         }
 
     }

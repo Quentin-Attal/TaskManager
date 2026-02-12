@@ -44,7 +44,6 @@ namespace Infrastructure.Auth.Services
 
             var now = DateTime.UtcNow;
 
-            // Build claims (adjust to your AppUser fields)
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -55,9 +54,6 @@ namespace Infrastructure.Auth.Services
 
             if (!string.IsNullOrWhiteSpace(user.Email))
                 claims.Add(new Claim(ClaimTypes.Email, user.Email));
-
-            // If you have roles on AppUser, add them like:
-            // foreach (var role in user.Roles) claims.Add(new Claim(ClaimTypes.Role, role));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -90,14 +86,7 @@ namespace Infrastructure.Auth.Services
         public string GetAllRefreshTokenByUserId(Guid userId)
         {
             if (userId == Guid.Empty) throw new ArgumentException("UserId is required.", nameof(userId));
-
-            var tokens = _refreshTokenRepo.GetByUserId(userId);
-
-            // Signature returns string, so return JSON deterministically.
-            return JsonSerializer.Serialize(tokens, new JsonSerializerOptions
-            {
-                WriteIndented = false
-            });
+            return String.Empty;
         }
 
         public string HashRefreshToken(string refreshTokenPlain)

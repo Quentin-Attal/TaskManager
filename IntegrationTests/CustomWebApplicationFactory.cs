@@ -13,75 +13,79 @@ using Respawn;
 using System.Diagnostics;
 using Testcontainers.PostgreSql;
 
-public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
+namespace IntegrationTests
 {
-    private readonly PostgreSqlContainer _postgres =
-        new PostgreSqlBuilder("postgres:16-alpine")
-            .WithDatabase("testdb")
-            .WithUsername("test")
-            .WithPassword("test")
-            .Build();
-
-    private Respawner _respawner = default!;
-    private string _connectionString = default!;
-
-    public async ValueTask InitializeAsync()
+    public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
-        await _postgres.StartAsync();
-        _connectionString = _postgres.GetConnectionString();
-        Debug.Write("PostgreSQL container started with connection string: " + _connectionString);
+        private readonly PostgreSqlContainer _postgres =
+            new PostgreSqlBuilder("postgres:16-alpine")
+                .WithDatabase("testdb")
+                .WithUsername("test")
+                .WithPassword("test")
+                .Build();
 
-        await InitializeDatabaseAsync();
-    }
+        private Respawner _respawner = default!;
+        private string _connectionString = default!;
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.ConfigureServices(services =>
+        public async ValueTask InitializeAsync()
         {
-            // Remove the production DbContext registration
-            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            await _postgres.StartAsync();
+            _connectionString = _postgres.GetConnectionString();
+            Debug.Write("PostgreSQL container started with connection string: " + _connectionString);
 
-            // Register DbContext pointing to container Postgres
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(_connectionString));
+            await InitializeDatabaseAsync();
+        }
 
-            services.AddAuthentication(options =>
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.ConfigureServices(services =>
             {
-                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
-                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
-            })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    TestAuthHandler.SchemeName, _ => { });
-        });
-    }
+                // Remove the production DbContext registration
+                services.RemoveAll<DbContextOptions<AppDbContext>>();
 
-    private async Task InitializeDatabaseAsync()
-    {
-        // Apply migrations + setup Respawn
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                // Register DbContext pointing to container Postgres
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_connectionString));
 
-        await db.Database.MigrateAsync();
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                })
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        TestAuthHandler.SchemeName, _ => { });
+            });
+        }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-
-        _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+        private async Task InitializeDatabaseAsync()
         {
-            DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["public"]
-        });
-    }
+            // Apply migrations + setup Respawn
+            using var scope = Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    public async Task ResetDatabaseAsync()
-    {
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        await _respawner.ResetAsync(conn);
-    }
+            await db.Database.MigrateAsync();
 
-    public new async ValueTask DisposeAsync()
-    {
-        await _postgres.DisposeAsync();
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"]
+            });
+        }
+
+        public async Task ResetDatabaseAsync()
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await _respawner.ResetAsync(conn);
+        }
+
+        public new async ValueTask DisposeAsync()
+        {
+            await _postgres.DisposeAsync();
+            GC.SuppressFinalize(this);
+        }
     }
 }

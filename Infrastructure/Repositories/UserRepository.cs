@@ -1,9 +1,6 @@
 ﻿using Application.Repositories;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Infrastructure.Repositories
 {
@@ -18,7 +15,7 @@ namespace Infrastructure.Repositories
 
         public async Task<AppUser?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            return await _context.Users.FindAsync(new object?[] { id, ct }, cancellationToken: ct);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         }
         public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct)
         {

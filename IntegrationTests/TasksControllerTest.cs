@@ -24,6 +24,12 @@ namespace IntegrationTests
             _client.DefaultRequestHeaders.Add("x-test-userid", _userId.ToString());
         }
 
+        public async ValueTask DisposeAsync()
+        {
+            await ValueTask.CompletedTask;
+            GC.SuppressFinalize(this);
+        }
+
         public async ValueTask InitializeAsync()
         {
             await _factory.ResetDatabaseAsync();
@@ -48,8 +54,6 @@ namespace IntegrationTests
 
             await db.SaveChangesAsync();
         }
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-
 
         [Fact]
         public async Task Get_Task_Should_Return_200()
