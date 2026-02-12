@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs;
+﻿namespace Contracts.Tasks;
 
 public class CreateTaskRequest
 {

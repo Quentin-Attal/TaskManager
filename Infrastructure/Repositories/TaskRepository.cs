@@ -1,47 +1,50 @@
-﻿using Application.Interfaces;
+﻿using Application.Repositories;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-public class TaskRepository : ITaskRepository
+namespace Infrastructure.Repositories
 {
-    private readonly AppDbContext _context;
-
-    public TaskRepository(AppDbContext context)
+    public class TaskRepository : ITaskRepository
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    public async Task<IEnumerable<TaskItem>> GetAllAsync()
-    {
-        return await _context.Tasks.ToListAsync();
-    }
+        public TaskRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-    public async Task<TaskItem?> GetByIdAsync(Guid id)
-    {
-        return await _context.Tasks.FindAsync(id);
-    }
+        public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
+        {
+            return await _context.Tasks.Where(t => t.UserId == userId).ToListAsync(ct);
+        }
 
-    public async Task AddAsync(TaskItem task)
-    {
-        await _context.Tasks.AddAsync(task);
-    }
+        public async Task<TaskItem?> GetByIdAsync(Guid userId, Guid id, CancellationToken ct)
+        {
+            return await _context.Tasks.Where(t => t.UserId == userId && t.Id == id).FirstOrDefaultAsync(ct);
+        }
 
-    public async Task UpdateAsync(TaskItem task)
-    {
-        _context.Tasks.Update(task);
-        await Task.CompletedTask;
-    }
+        public async Task AddAsync(TaskItem task, CancellationToken ct)
+        {
+            await _context.Tasks.AddAsync(task, ct);
+        }
 
-    public async Task DeleteAsync(Guid id)
-    {
-        var task = await GetByIdAsync(id);
-        if (task != null)
-            _context.Tasks.Remove(task);
-    }
+        public Task UpdateAsync(TaskItem task)
+        {
+            _context.Tasks.Update(task);
+            return Task.CompletedTask;
+        }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
+        public async Task DeleteAsync(Guid userId, Guid id, CancellationToken ct)
+        {
+            var task = await GetByIdAsync(userId, id, ct);
+            if (task != null)
+                _context.Tasks.Remove(task);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken ct)
+        {
+            await _context.SaveChangesAsync(ct);
+        }
     }
 }

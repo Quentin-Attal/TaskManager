@@ -1,4 +1,6 @@
 ﻿using Infrastructure;
+using IntegrationTests.Handler;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +44,14 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             // Register DbContext pointing to container Postgres
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_connectionString));
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName, _ => { });
         });
     }
 

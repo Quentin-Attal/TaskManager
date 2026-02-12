@@ -11,6 +11,11 @@ permissions:
 jobs:
   build_test_publish:
     runs-on: ubuntu-latest
+    env:
+      Jwt__Issuer: "MyApp"
+      Jwt__Audience: "MyApp.Client"
+      Jwt__Key: ${{ secrets.JWT_KEY }}
+      TokenHash__Pepper: ${{ secrets.TOKEN_HASH_PEPPER }}
 
     steps:
       - name: Checkout

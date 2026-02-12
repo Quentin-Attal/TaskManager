@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.DTOs;
+using Contracts.Tasks;
 using Domain.Entities;
 using FluentAssertions;
 using Infrastructure;
@@ -13,12 +13,15 @@ namespace IntegrationTests
     {
         private readonly HttpClient _client;
         private readonly CustomWebApplicationFactory _factory;
-        private readonly Guid guid = Guid.NewGuid();
+        private readonly Guid _taskId = Guid.NewGuid();
+        private readonly Guid _userId = Guid.NewGuid();
 
         public TasksControllerTest(CustomWebApplicationFactory factory)
         {
             _client = factory.CreateClient();
             _factory = factory;
+
+            _client.DefaultRequestHeaders.Add("x-test-userid", _userId.ToString());
         }
 
         public async ValueTask InitializeAsync()
@@ -30,10 +33,17 @@ namespace IntegrationTests
 
             db.Tasks.Add(new TaskItem
             {
-                Id = guid,
+                Id = _taskId,
                 Title = "Seed 1",
                 CreatedAtUtc = DateTime.UtcNow,
-                IsDone = false
+                IsDone = false,
+                AppUser = new AppUser
+                { 
+                    Id  = _userId,
+                    Email = "mail.com", 
+                    PasswordHash = "hash", 
+                    CreatedAtUtc = DateTime.UtcNow,
+                },
             });
 
             await db.SaveChangesAsync();
@@ -85,7 +95,7 @@ namespace IntegrationTests
         {
             var cancellationToken = TestContext.Current.CancellationToken;
             var createTaskRequest = new CreateTaskRequest { Title = "title" };
-            var response = await _client.PutAsJsonAsync("/api/tasks/" + guid, new object(), cancellationToken: cancellationToken);
+            var response = await _client.PutAsJsonAsync("/api/tasks/" + _taskId, new object(), cancellationToken: cancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -104,7 +114,7 @@ namespace IntegrationTests
         {
             var cancellationToken = TestContext.Current.CancellationToken;
             var createTaskRequest = new CreateTaskRequest { Title = "title" };
-            var response = await _client.DeleteAsync("/api/tasks/" + guid, cancellationToken: cancellationToken);
+            var response = await _client.DeleteAsync("/api/tasks/" + _taskId, cancellationToken: cancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
