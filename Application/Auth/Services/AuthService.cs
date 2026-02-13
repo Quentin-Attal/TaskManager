@@ -15,10 +15,10 @@ namespace Application.Auth.Services
 
         private readonly PasswordHasher<AppUser> _hasher = new();
 
-        public async Task<AuthLoginResult?> LoginAsync(LoginRequest request, AuthRequestContext context, CancellationToken ct)
+        public async Task<AuthLoginResult?> LoginAsync(LoginRequest request, CancellationToken ct)
         {
-            _ = NormalizeEmail(request.Email);
-            var user = await _repo.GetByEmailAsync(request.Email, ct);
+            string email = NormalizeEmail(request.Email);
+            var user = await _repo.GetByEmailAsync(email, ct);
             if (user == null)
             {
                 return null;
@@ -48,14 +48,14 @@ namespace Application.Auth.Services
             );
         }
 
-        public async Task LogoutAsync(string? refreshTokenPlain, AuthRequestContext context, CancellationToken ct)
+        public async Task LogoutAsync(Guid userId, string? refreshTokenPlain, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(refreshTokenPlain))
                 return;
 
             var hash = _tokenService.HashRefreshToken(refreshTokenPlain);
 
-            var token = await _repoToken.FindByHashAsync(hash, ct);
+            var token = await _repoToken.FindByHashAsync(userId, hash, ct);
             if (token is null || token.RevokedAtUtc is not null)
                 return;
 
@@ -64,7 +64,7 @@ namespace Application.Auth.Services
             await _repoToken.SaveChangesAsync(ct);
         }
 
-        public async Task<AuthRefreshResult?> RefreshAsync(string refreshTokenPlain, AuthRequestContext context, CancellationToken ct)
+        public async Task<AuthRefreshResult?> RefreshAsync(Guid userId, string refreshTokenPlain, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(refreshTokenPlain))
             {
@@ -73,14 +73,14 @@ namespace Application.Auth.Services
 
             var hash = _tokenService.HashRefreshToken(refreshTokenPlain);
 
-            var existing = await _repoToken.FindByHashAsync(hash, ct);
-            if (existing is null || !existing.IsActive)
+            var existing = await _repoToken.FindByHashAsync(userId, hash, ct);
+            if (existing is null)
                 return null;
 
-            if (existing.RevokedAtUtc != null)
+            if (!existing.IsActive)
             {
                 // TOKEN REUSE DETECTED
-                await RevokeAllUserRefreshTokens(existing.UserId);
+                await RevokeAllUserRefreshTokens(userId);
                 return null;
             }
 
@@ -101,7 +101,7 @@ namespace Application.Auth.Services
             var user = existing.User;
             if (user is null)
             {
-                user = await _repo.GetByIdAsync(existing.UserId, ct);
+                user = await _repo.GetByIdAsync(userId, ct);
                 if (user is null) return null;
             }
 

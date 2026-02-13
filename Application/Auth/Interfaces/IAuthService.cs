@@ -5,9 +5,9 @@ namespace Application.Auth.Interfaces
 {
     public interface IAuthService
     {
-        Task<AuthLoginResult?> LoginAsync(LoginRequest request, AuthRequestContext context, CancellationToken ct);
-        Task<AuthRefreshResult?> RefreshAsync(string refreshTokenPlain, AuthRequestContext context, CancellationToken ct);
-        Task LogoutAsync(string? refreshTokenPlain, AuthRequestContext context, CancellationToken ct);
+        Task<AuthLoginResult?> LoginAsync(LoginRequest request, CancellationToken ct);
+        Task<AuthRefreshResult?> RefreshAsync(Guid userId, string refreshTokenPlain, CancellationToken ct);
+        Task LogoutAsync(Guid userId, string? refreshTokenPlain, CancellationToken ct);
     }
 
 }

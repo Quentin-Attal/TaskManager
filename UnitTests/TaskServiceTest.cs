@@ -2,7 +2,6 @@
 using Application.Tasks.Services;
 using Domain.Entities;
 using Moq;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace UnitTests
 {
@@ -81,8 +80,8 @@ namespace UnitTests
 
             var result = await handler.MarkDoneAsync(userId, id, cancellationToken);
 
-            Assert.True(result);
             Assert.IsType<Boolean>(result);
+            Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Once);
             repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
@@ -109,8 +108,8 @@ namespace UnitTests
 
             var result = await handler.DeleteAsync(userId, id, cancellationToken);
 
-            Assert.True(result);
             Assert.IsType<Boolean>(result);
+            Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             repoMock.Verify(r => r.DeleteAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);

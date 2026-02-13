@@ -11,11 +11,11 @@ namespace Infrastructure.Repositories
     {
         private readonly AppDbContext _db = db;
 
-        public Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct)
+        public Task<RefreshToken?> FindByHashAsync(Guid userId, string tokenHash, CancellationToken ct)
         {
             return _db.RefreshTokens
                 .Include(rt => rt.User)
-                .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, ct);
+                .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash && rt.UserId == userId, ct);
         }
 
         public async Task AddAsync(RefreshToken token, CancellationToken ct)

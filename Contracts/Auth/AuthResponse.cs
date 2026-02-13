@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Contracts.Auth
 {
-    public sealed record AuthResponse(string AccessToken);
+    public sealed record AuthResponse(string AccessToken, string? RefreshToken, DateTime? ExpirationDate);
 }
