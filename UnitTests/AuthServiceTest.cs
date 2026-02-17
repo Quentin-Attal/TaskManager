@@ -79,7 +79,6 @@ namespace UnitTests
             var repoUserMock = new Mock<IUserRepository>();
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
-            var hasherMock = new Mock<PasswordHasher<AppUser>>();
 
             var hasher = new PasswordHasher<AppUser>();
 
@@ -120,31 +119,23 @@ namespace UnitTests
             var serviceTokenMock = new Mock<ITokenService>();
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
 
-            var hasher = new PasswordHasher<AppUser>();
-
             var token = new RefreshToken()
             {
                 TokenHash = hash,
                 UserId = userId,
+                ExpiresAtUtc = DateTime.UtcNow.AddDays(2),
             };
 
             // Whatever your refresh token return type is—adjust accordingly
-            serviceTokenMock
-                .Setup(s => s.HashRefreshToken(hash))
-                .Returns(hash);
-
             repoRefreshTokenMock
-                .Setup(s => s.FindByHashAsync(userId, hash, cancellationToken))
-                .ReturnsAsync(token);
-
+                .Setup(s => s.GetActivesByUserId(userId, cancellationToken))
+                .ReturnsAsync([token]);
 
             var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
 
-            await handler.LogoutAsync(userId, hash, cancellationToken);
+            await handler.LogoutAsync(userId, cancellationToken);
 
-            serviceTokenMock.Verify(r => r.HashRefreshToken(hash), Times.Once);
-
-            repoRefreshTokenMock.Verify(r => r.FindByHashAsync(userId, hash, cancellationToken), Times.Once);
+            repoRefreshTokenMock.Verify(r => r.GetActivesByUserId(userId, cancellationToken), Times.Once);
             repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 
@@ -159,9 +150,6 @@ namespace UnitTests
             var repoUserMock = new Mock<IUserRepository>();
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
-            var hasherMock = new Mock<PasswordHasher<AppUser>>();
-
-            var hasher = new PasswordHasher<AppUser>();
 
             var token = new RefreshToken()
             {
@@ -206,7 +194,6 @@ namespace UnitTests
             serviceTokenMock.Verify(r => r.CreateAccessToken(user), Times.Once);
 
             repoRefreshTokenMock.Verify(r => r.FindByHashAsync(hash, cancellationToken), Times.Once);
-            repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 
         [Fact]

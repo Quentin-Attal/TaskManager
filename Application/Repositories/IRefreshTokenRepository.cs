@@ -11,6 +11,7 @@ namespace Application.Repositories
         Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct);
         Task AddAsync(RefreshToken token, CancellationToken ct);
         Task SaveChangesAsync(CancellationToken ct);
-        Task<RefreshToken?> GetActiveByUserId(Guid id);
+        Task<RefreshToken?> GetActiveByUserId(Guid id, CancellationToken ct);
+        Task<List<RefreshToken>> GetActivesByUserId(Guid id, CancellationToken ct);
     }
 }

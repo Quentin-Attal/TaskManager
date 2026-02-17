@@ -253,16 +253,6 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Post_Logout_Should_Return_200_When_Cookie_Missing()
-        {
-            var ct = TestContext.Current.CancellationToken;
-
-            var response = await _client.PostAsync("/api/auth/logout", content: null, cancellationToken: ct);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Headers.TryGetValues("Set-Cookie", out _).Should().BeFalse();
-        }
-
-        [Fact]
         public async Task Post_Logout_Should_Return_200_And_Delete_Cookie_When_Cookie_Present()
         {
             var ct = TestContext.Current.CancellationToken;

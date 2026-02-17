@@ -8,7 +8,7 @@ namespace Application.Auth.Interfaces
         Task<(AuthLoginResult? Result, AuthErrorCode Error)> LoginAsync(LoginRequest request, CancellationToken ct);
         Task<(AuthLoginResult? Result, AuthErrorCode Error)> RegisterAsync(RegisterRequest request, CancellationToken ct);
         Task<AuthRefreshResult?> RefreshAsync(string refreshTokenPlain, CancellationToken ct);
-        Task LogoutAsync(Guid userId, string? refreshTokenPlain, CancellationToken ct);
+        Task LogoutAsync(Guid userId, CancellationToken ct);
     }
 
 }

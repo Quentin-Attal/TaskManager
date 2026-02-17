@@ -6,8 +6,8 @@ namespace Application.Auth.Models
 {
     public sealed record AuthRefreshResult(
         string AccessToken,
-        string RefreshTokenPlain,
-        DateTime RefreshTokenExpiresAtUtc
+        string? RefreshTokenPlain,
+        DateTime? RefreshTokenExpiresAtUtc
     );
 
 }

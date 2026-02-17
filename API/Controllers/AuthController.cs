@@ -126,12 +126,7 @@ namespace API.Controllers
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
             var userId = User.GetUserId();
-            var refreshToken = Request.Cookies["refresh_token"];
-            if (refreshToken == null)
-            {
-                return Ok();
-            }
-            await _authService.LogoutAsync(userId, refreshToken, ct);
+            await _authService.LogoutAsync(userId, ct);
 
             Response.Cookies.Delete("refresh_token", new CookieOptions
             {

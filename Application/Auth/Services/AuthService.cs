@@ -33,14 +33,6 @@ namespace Application.Auth.Services
                 return (null, AuthErrorCode.InvalidCredentials); ;
             }
 
-            var lastToken = await _repoToken.GetActiveByUserId(user.Id);
-            if (lastToken != null)
-            {
-                lastToken.RevokedAtUtc = DateTime.UtcNow;
-
-                await _repoToken.SaveChangesAsync(ct);
-            }
-
             var accessToken = _tokenService.CreateAccessToken(user);
 
             var refresh = _tokenService.CreateRefreshToken();
@@ -94,20 +86,9 @@ namespace Application.Auth.Services
             return await LoginAsync(loginRequest, ct);
         }
 
-        public async Task LogoutAsync(Guid userId, string? refreshTokenPlain, CancellationToken ct)
+        public async Task LogoutAsync(Guid userId, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(refreshTokenPlain))
-                return;
-
-            var hash = _tokenService.HashRefreshToken(refreshTokenPlain);
-
-            var token = await _repoToken.FindByHashAsync(userId, hash, ct);
-            if (token is null || token.RevokedAtUtc is not null)
-                return;
-
-            token.RevokedAtUtc = DateTime.UtcNow;
-
-            await _repoToken.SaveChangesAsync(ct);
+            await RevokeAllUserRefreshTokens(userId, ct);
         }
 
         public async Task<AuthRefreshResult?> RefreshAsync(string refreshTokenPlain, CancellationToken ct)
@@ -128,21 +109,7 @@ namespace Application.Auth.Services
                 await RevokeAllUserRefreshTokens(existing.UserId, ct);
                 return null;
             }
-
-            existing.RevokedAtUtc = DateTime.UtcNow;
-
-
-            var refresh = _tokenService.CreateRefreshToken();
-
-            existing.ReplacedByTokenHash = refresh.TokenHash;
-
-            await _repoToken.AddAsync(new RefreshToken
-            {
-                UserId = existing.UserId,
-                TokenHash = refresh.TokenHash,
-                ExpiresAtUtc = refresh.ExpiresAtUtc
-            }, ct);
-
+            
             var user = existing.User;
             if (user is null)
             {
@@ -152,21 +119,22 @@ namespace Application.Auth.Services
 
             var accessToken = _tokenService.CreateAccessToken(user);
 
-            await _repoToken.SaveChangesAsync(ct);
-
             return new AuthRefreshResult(
                 AccessToken: accessToken,
-                RefreshTokenPlain: refresh.PlainToken,
-                RefreshTokenExpiresAtUtc: refresh.ExpiresAtUtc
+                RefreshTokenPlain: null,
+                RefreshTokenExpiresAtUtc: null
             );
         }
 
         private async Task RevokeAllUserRefreshTokens(Guid userId, CancellationToken ct)
         {
-            var lastToken = await _repoToken.GetActiveByUserId(userId);
+            var lastToken = await _repoToken.GetActivesByUserId(userId, ct);
             if (lastToken != null)
             {
-                lastToken.RevokedAtUtc = DateTime.UtcNow;
+                foreach (var item in lastToken)
+                {
+                    item.RevokedAtUtc = DateTime.UtcNow;
+                }
 
                 await _repoToken.SaveChangesAsync(ct);
             }
