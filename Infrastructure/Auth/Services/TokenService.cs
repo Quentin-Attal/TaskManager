@@ -77,12 +77,6 @@ namespace Infrastructure.Auth.Services
             );
         }
 
-        public string GetAllRefreshTokenByUserId(Guid userId)
-        {
-            if (userId == Guid.Empty) throw new ArgumentException("UserId is required.", nameof(userId));
-            return String.Empty;
-        }
-
         public string HashRefreshToken(string refreshTokenPlain)
         {
             if (string.IsNullOrWhiteSpace(refreshTokenPlain))

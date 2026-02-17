@@ -18,6 +18,13 @@ namespace Infrastructure.Repositories
                 .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash && rt.UserId == userId, ct);
         }
 
+        public Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct)
+        {
+            return _db.RefreshTokens
+                .Include(rt => rt.User)
+                .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, ct);
+        }
+
         public async Task AddAsync(RefreshToken token, CancellationToken ct)
         {
             await _db.RefreshTokens.AddAsync(token, ct);

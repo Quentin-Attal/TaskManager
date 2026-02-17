@@ -178,7 +178,7 @@ namespace UnitTests
 
             // Whatever your refresh token return type is—adjust accordingly
             repoRefreshTokenMock
-                .Setup(s => s.FindByHashAsync(userId, hash, cancellationToken))
+                .Setup(s => s.FindByHashAsync(hash, cancellationToken))
                 .ReturnsAsync(token);
 
             serviceTokenMock
@@ -197,7 +197,7 @@ namespace UnitTests
 
             var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
 
-            var result = await handler.RefreshAsync(userId, hash, cancellationToken);
+            var result = await handler.RefreshAsync(hash, cancellationToken);
 
             Assert.NotNull(result);
             Assert.IsType<AuthRefreshResult>(result, exactMatch: true);
@@ -205,7 +205,7 @@ namespace UnitTests
             serviceTokenMock.Verify(r => r.HashRefreshToken(hash), Times.Once);
             serviceTokenMock.Verify(r => r.CreateAccessToken(user), Times.Once);
 
-            repoRefreshTokenMock.Verify(r => r.FindByHashAsync(userId, hash, cancellationToken), Times.Once);
+            repoRefreshTokenMock.Verify(r => r.FindByHashAsync(hash, cancellationToken), Times.Once);
             repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 

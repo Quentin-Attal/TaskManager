@@ -1,5 +1,6 @@
 ﻿using API.Common.Extensions;
 using Application.Auth.Interfaces;
+using Application.Auth.Models;
 using Application.Auth.Services;
 using Application.Common;
 using Contracts.Auth;
@@ -23,7 +24,19 @@ namespace API.Controllers
             if (Result != null)
             {
                 var result = Result;
-                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenPlain, result.RefreshTokenExpiresAtUtc);
+                Response.Cookies.Append(
+                    "refresh_token",
+                    result.RefreshTokenPlain,
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Path = "/api/auth",
+                        Expires = DateTimeOffset.UtcNow.AddDays(30)
+                    }
+                );
+                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenExpiresAtUtc);
                 var response = ApiResponse<AuthResponse>
                     .SuccessResponse(authResponse, "Login sucessfully");
                 return Ok(response);
@@ -49,7 +62,19 @@ namespace API.Controllers
             if (Result != null)
             {
                 var result = Result;
-                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenPlain, result.RefreshTokenExpiresAtUtc);
+                Response.Cookies.Append(
+                    "refresh_token",
+                    result.RefreshTokenPlain,
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Path = "/api/auth",
+                        Expires = DateTimeOffset.UtcNow.AddDays(30)
+                    }
+                );
+                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenExpiresAtUtc);
                 var response = ApiResponse<AuthResponse>
                     .SuccessResponse(authResponse, "Register sucessfully");
                 return Ok(response);
@@ -70,20 +95,20 @@ namespace API.Controllers
             }
         }
 
-        [Authorize]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(CancellationToken ct)
         {
-            var userId = User.GetUserId();
-            var refreshToken = Request.Cookies["refresh_token"];
-            if (refreshToken == null)
+            if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
+                string.IsNullOrWhiteSpace(refreshToken))
             {
-                return BadRequest();
+                var errorResponse = ApiResponse<bool>.FailureResponse("Missing refresh token.");
+                return Unauthorized(errorResponse);
             }
-            var authRefreshResult = await _authService.RefreshAsync(userId, refreshToken, ct);
+
+            var authRefreshResult = await _authService.RefreshAsync(refreshToken, ct);
             if (authRefreshResult != null)
             {
-                var authResponse = new AuthResponse(authRefreshResult.AccessToken, null, null);
+                var authResponse = new AuthResponse(authRefreshResult.AccessToken, null);
                 var response = ApiResponse<AuthResponse>
                     .SuccessResponse(authResponse, "Refresh sucessfully");
                 return Ok(response);
@@ -92,9 +117,8 @@ namespace API.Controllers
             {
                 var errorResponse = ApiResponse<bool>
                      .FailureResponse("Refresh failed");
-                return NotFound(errorResponse);
+                return Unauthorized(errorResponse);
             }
-
         }
 
         [Authorize]
@@ -109,7 +133,13 @@ namespace API.Controllers
             }
             await _authService.LogoutAsync(userId, refreshToken, ct);
 
-            Response.Cookies.Delete("refresh_token");
+            Response.Cookies.Delete("refresh_token", new CookieOptions
+            {
+                Path = "/api/auth",
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax
+            });
+
             return Ok();
         }
 

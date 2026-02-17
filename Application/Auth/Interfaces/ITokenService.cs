@@ -11,7 +11,6 @@ namespace Application.Auth.Interfaces
         string CreateAccessToken(AppUser user);
         RefreshTokenDescriptor CreateRefreshToken();
         string HashRefreshToken(string refreshTokenPlain);
-        string GetAllRefreshTokenByUserId(Guid userId);
     }
 
 }

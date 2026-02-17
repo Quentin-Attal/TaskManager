@@ -110,7 +110,7 @@ namespace Application.Auth.Services
             await _repoToken.SaveChangesAsync(ct);
         }
 
-        public async Task<AuthRefreshResult?> RefreshAsync(Guid userId, string refreshTokenPlain, CancellationToken ct)
+        public async Task<AuthRefreshResult?> RefreshAsync(string refreshTokenPlain, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(refreshTokenPlain))
             {
@@ -119,13 +119,13 @@ namespace Application.Auth.Services
 
             var hash = _tokenService.HashRefreshToken(refreshTokenPlain);
 
-            var existing = await _repoToken.FindByHashAsync(userId, hash, ct);
+            var existing = await _repoToken.FindByHashAsync(hash, ct);
             if (existing is null)
                 return null;
 
             if (!existing.IsActive)
             {
-                await RevokeAllUserRefreshTokens(userId, ct);
+                await RevokeAllUserRefreshTokens(existing.UserId, ct);
                 return null;
             }
 
@@ -146,7 +146,7 @@ namespace Application.Auth.Services
             var user = existing.User;
             if (user is null)
             {
-                user = await _repo.GetByIdAsync(userId, ct);
+                user = await _repo.GetByIdAsync(existing.UserId, ct);
                 if (user is null) return null;
             }
 

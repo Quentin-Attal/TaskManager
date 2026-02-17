@@ -74,7 +74,6 @@ namespace IntegrationTests
             apiResponse.Success.Should().BeTrue();
             apiResponse.Data.Should().NotBeNull();
             apiResponse.Data.AccessToken.Should().NotBe(null);
-            apiResponse.Data.RefreshToken.Should().NotBe(null);
             apiResponse.Data.ExpirationDate.Should().NotBe(null);
             apiResponse.Message.Should().Be("Login sucessfully");
         }
@@ -111,7 +110,6 @@ namespace IntegrationTests
             apiResponse.Success.Should().BeTrue();
             apiResponse.Data.Should().NotBeNull();
             apiResponse.Data.AccessToken.Should().NotBe(null);
-            apiResponse.Data.RefreshToken.Should().NotBe(null);
             apiResponse.Data.ExpirationDate.Should().NotBe(null);
             apiResponse.Message.Should().Be("Register sucessfully");
         }
@@ -206,15 +204,14 @@ namespace IntegrationTests
             var loginResponse = await _client.SendAsync(PostJson("/api/auth/login", loginRequest), cancellationToken: ct);
             loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var loginApi = await loginResponse.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>(cancellationToken: ct);
-            loginApi.Should().NotBeNull();
-            loginApi!.Data.Should().NotBeNull();
-            loginApi.Data!.RefreshToken.Should().NotBeNull();
+            var setCookie = loginResponse.Headers.TryGetValues("Set-Cookie", out var values)
+                ? values.FirstOrDefault(v => v.StartsWith("refresh_token="))
+                : null;
 
-            var refreshToken = loginApi.Data.RefreshToken!;
+            setCookie.Should().NotBeNull();
 
             using var refreshMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
-            refreshMessage.Headers.Add("Cookie", $"refresh_token={refreshToken}");
+            refreshMessage.Headers.Add("Cookie", setCookie!.Split(';')[0]);
 
             var refreshResponse = await _client.SendAsync(refreshMessage, ct);
             refreshResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -225,9 +222,8 @@ namespace IntegrationTests
             refreshApi.Data.Should().NotBeNull();
             refreshApi.Data!.AccessToken.Should().NotBeNull();
 
-            refreshApi.Data.RefreshToken.Should().BeNull();
             refreshApi.Data.ExpirationDate.Should().BeNull();
-            refreshApi.Message = "Refresh sucessfully";
+            refreshApi.Message.Should().Be("Refresh sucessfully");
         }
 
         [Fact]
@@ -236,7 +232,7 @@ namespace IntegrationTests
             var ct = TestContext.Current.CancellationToken;
 
             var response = await _client.PostAsync("/api/auth/refresh", content: null, cancellationToken: ct);
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
         [Fact]
@@ -248,7 +244,7 @@ namespace IntegrationTests
             msg.Headers.Add("Cookie", "refresh_token=invalid_token_value");
 
             var response = await _client.SendAsync(msg, ct);
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
             var api = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>(cancellationToken: ct);
             api.Should().NotBeNull();
