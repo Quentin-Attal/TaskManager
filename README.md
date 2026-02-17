@@ -1,1 +1,63 @@
 # TaskManager
+
+API REST de gestion de tâches (*to-do*) avec authentification JWT + refresh tokens, construite en .NET avec une architecture en couches (API / Application / Domain / Infrastructure).
+
+## ✨ Features
+
+- Authentification :
+  - Register / Login
+  - JWT (access token)
+  - Refresh tokens stockés en base **hachés** + rotation + révocation
+  - Logout
+- Gestion des tâches (auth requise) :
+  - Lister ses tâches
+  - Créer une tâche
+  - Marquer une tâche comme terminée
+  - Supprimer une tâche
+- Rate limiting sur les routes d’auth
+- EF Core + migrations
+- CI GitHub Actions :
+  - build
+  - `dotnet format --verify-no-changes`
+  - tests unitaires + intégration
+
+---
+
+## 🧱 Architecture
+
+Le repo est organisé en 4 couches :
+
+- **API** : controllers, middleware, configuration, endpoints HTTP
+- **Application** : services métier, interfaces (repositories/services), DTOs, réponses API
+- **Domain** : entités
+- **Infrastructure** : EF Core, repositories, services techniques
+
+---
+
+## ✅ Prérequis
+
+- .NET SDK (version du projet / CI)
+- Une base de données supportée par EF Core (selon la config)
+
+---
+
+## ⚙️ Configuration
+
+Crée un fichier `appsettings.json` (ou utilise des variables d’environnement) avec les sections suivantes (exemple) :
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "YOUR_CONNECTION_STRING"
+  },
+  "Jwt": {
+    "Issuer": "TaskManager",
+    "Audience": "TaskManager",
+    "Key": "PUT_A_LONG_RANDOM_SECRET_HERE",
+    "AccessTokenLifetimeMinutes": 15,
+    "RefreshTokenLifetimeDays": 7
+  },
+  "TokenHash": {
+    "Pepper": "PUT_A_SERVER_SIDE_PEPPER_HERE"
+  }
+}
