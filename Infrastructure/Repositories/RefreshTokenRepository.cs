@@ -22,11 +22,10 @@ namespace Infrastructure.Repositories
         {
             await _db.RefreshTokens.AddAsync(token, ct);
         }
-        public Task<RefreshToken?> GetByUserId(Guid id)
+        public Task<RefreshToken?> GetActiveByUserId(Guid id)
         {
             return _db.RefreshTokens
-                .Include(rt => rt.User)
-                .SingleOrDefaultAsync(rt => rt.UserId == id);
+                .SingleOrDefaultAsync(rt => rt.UserId == id && rt.RevokedAtUtc == null && rt.ExpiresAtUtc > DateTime.UtcNow);
         }
 
         public async Task SaveChangesAsync(CancellationToken ct)

@@ -1,7 +1,10 @@
-﻿using Infrastructure;
+﻿using Application.Common;
+using Infrastructure;
 using IntegrationTests.Handler;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -11,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using Respawn;
 using System.Diagnostics;
+using System.Threading.RateLimiting;
 using Testcontainers.PostgreSql;
 
 namespace IntegrationTests
@@ -38,6 +42,8 @@ namespace IntegrationTests
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseEnvironment("Testing");
+
             builder.ConfigureServices(services =>
             {
                 // Remove the production DbContext registration
@@ -54,6 +60,7 @@ namespace IntegrationTests
                 })
                     .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                         TestAuthHandler.SchemeName, _ => { });
+
             });
         }
 

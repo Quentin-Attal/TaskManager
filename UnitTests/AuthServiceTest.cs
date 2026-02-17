@@ -17,7 +17,7 @@ namespace UnitTests
         {
             var cancellationToken = TestContext.Current.CancellationToken;
             string email = "email@mail.com";
-            string password = "password";
+            string password = "password12@";
             var loginRequest = new LoginRequest(email, password);
 
             var repoUserMock = new Mock<IUserRepository>();
@@ -56,9 +56,7 @@ namespace UnitTests
             var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
 
             var result = await handler.LoginAsync(loginRequest, cancellationToken);
-
-            Assert.NotNull(result);
-            Assert.IsType<AuthLoginResult>(result, exactMatch: true);
+            Assert.IsType<(AuthLoginResult, AuthErrorCode)>(result, exactMatch: true);
             repoUserMock.Verify(r => r.GetByEmailAsync(email, cancellationToken), Times.Once);
 
             serviceTokenMock.Verify(r => r.CreateAccessToken(It.IsAny<AppUser>()), Times.Once);
@@ -66,6 +64,48 @@ namespace UnitTests
 
             repoRefreshTokenMock.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), cancellationToken), Times.Once);
             repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task Should_RegisterAsync()
+        {
+            var cancellationToken = TestContext.Current.CancellationToken;
+            string email = "newemail@mail.com";
+            string password = "hashPasword12@";
+            string confirmPassword = "hashPasword12@";
+            var loginRequest = new RegisterRequest(email, password, confirmPassword);
+
+            var repoUserMock = new Mock<IUserRepository>();
+            var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
+            var serviceTokenMock = new Mock<ITokenService>();
+            var hasherMock = new Mock<PasswordHasher<AppUser>>();
+
+            var hasher = new PasswordHasher<AppUser>();
+
+
+            var user = new AppUser
+            {
+                Email = email
+            };
+            user.PasswordHash = hasher.HashPassword(user, password);
+
+            repoUserMock
+                .Setup(r => r.GetByEmailAsync(email, cancellationToken))
+                .ReturnsAsync((AppUser?)null);
+
+            serviceTokenMock
+                .Setup(s => s.CreateAccessToken(It.IsAny<AppUser>()))
+                .Returns("access-token");
+
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
+
+            var result = await handler.RegisterAsync(loginRequest, cancellationToken);
+            Assert.IsType<(AuthLoginResult, AuthErrorCode)>(result, exactMatch: true);
+            repoUserMock.Verify(r => r.GetByEmailAsync(email, cancellationToken), Times.Exactly(2));
+            repoUserMock.Verify(r => r.AddAsync(It.IsAny<AppUser>(), cancellationToken), Times.Once);
+            repoUserMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+
         }
 
         [Fact]

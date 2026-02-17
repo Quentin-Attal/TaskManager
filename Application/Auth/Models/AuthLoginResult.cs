@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Contracts.Auth;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

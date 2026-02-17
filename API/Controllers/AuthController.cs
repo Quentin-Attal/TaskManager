@@ -5,6 +5,7 @@ using Application.Common;
 using Contracts.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers
 {
@@ -14,21 +15,57 @@ namespace API.Controllers
     {
         private readonly IAuthService _authService = authService;
 
+        [EnableRateLimiting("auth")]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request, CancellationToken ct)
         {
-            var authLoginResult = await _authService.LoginAsync(request, ct);
-            if (authLoginResult != null)
+            var (Result, Error) = await _authService.LoginAsync(request, ct);
+            if (Result != null)
             {
-                var authResponse = new AuthResponse(authLoginResult.AccessToken, authLoginResult.RefreshTokenPlain, authLoginResult.RefreshTokenExpiresAtUtc);
+                var result = Result;
+                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenPlain, result.RefreshTokenExpiresAtUtc);
                 var response = ApiResponse<AuthResponse>
                     .SuccessResponse(authResponse, "Login sucessfully");
                 return Ok(response);
             }
             else
             {
+                string message = Error switch
+                {
+                    AuthErrorCode.InvalidEmail => "Format email is wrong",
+                    _ => "Login failed",
+                };
                 var errorResponse = ApiResponse<bool>
-                     .FailureResponse("Login failed");
+                     .FailureResponse(message);
+                return Unauthorized(errorResponse);
+            }
+        }
+
+        [EnableRateLimiting("auth")]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
+        {
+            var (Result, Error) = await _authService.RegisterAsync(request, ct);
+            if (Result != null)
+            {
+                var result = Result;
+                var authResponse = new AuthResponse(result.AccessToken, result.RefreshTokenPlain, result.RefreshTokenExpiresAtUtc);
+                var response = ApiResponse<AuthResponse>
+                    .SuccessResponse(authResponse, "Register sucessfully");
+                return Ok(response);
+            }
+            else
+            {
+                string message = Error switch
+                {
+                    AuthErrorCode.InvalidEmail => "Format email is wrong",
+                    AuthErrorCode.InvalidCredentials => "Password not match",
+                    AuthErrorCode.PasswordTooWeak => "Password too weak",
+                    AuthErrorCode.EmailAlreadyExists => "Email alredy exist",
+                    _ => "Register failed",
+                };
+                var errorResponse = ApiResponse<bool>
+                     .FailureResponse(message);
                 return BadRequest(errorResponse);
             }
         }
@@ -48,13 +85,13 @@ namespace API.Controllers
             {
                 var authResponse = new AuthResponse(authRefreshResult.AccessToken, null, null);
                 var response = ApiResponse<AuthResponse>
-                    .SuccessResponse(authResponse, "Login sucessfully");
+                    .SuccessResponse(authResponse, "Refresh sucessfully");
                 return Ok(response);
             }
             else
             {
                 var errorResponse = ApiResponse<bool>
-                     .FailureResponse("Login failed");
+                     .FailureResponse("Refresh failed");
                 return NotFound(errorResponse);
             }
 

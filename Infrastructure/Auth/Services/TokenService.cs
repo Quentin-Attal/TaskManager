@@ -16,16 +16,13 @@ namespace Infrastructure.Auth.Services
     {
         private readonly JwtOptions _jwt;
         private readonly TokenHashOptions _hash;
-        private readonly IRefreshTokenRepository _refreshTokenRepo;
 
         public TokenService(
             IOptions<JwtOptions> jwtOptions,
-            IOptions<TokenHashOptions> hashOptions,
-            IRefreshTokenRepository refreshTokenRepo)
+            IOptions<TokenHashOptions> hashOptions)
         {
             _jwt = jwtOptions?.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
             _hash = hashOptions?.Value ?? throw new ArgumentNullException(nameof(hashOptions));
-            _refreshTokenRepo = refreshTokenRepo ?? throw new ArgumentNullException(nameof(refreshTokenRepo));
 
             if (string.IsNullOrWhiteSpace(_jwt.Key))
                 throw new InvalidOperationException("Jwt:SigningKey is required.");
@@ -51,9 +48,6 @@ namespace Infrastructure.Auth.Services
                 new(JwtRegisteredClaimNames.Iat, ToUnixTimeSeconds(now).ToString(), ClaimValueTypes.Integer64),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
-
-            if (!string.IsNullOrWhiteSpace(user.Email))
-                claims.Add(new Claim(ClaimTypes.Email, user.Email));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

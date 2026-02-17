@@ -4,6 +4,7 @@ using Application.Repositories;
 using Contracts.Auth;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using System.Text.RegularExpressions;
 
 namespace Application.Auth.Services
 {
@@ -15,18 +16,31 @@ namespace Application.Auth.Services
 
         private readonly PasswordHasher<AppUser> _hasher = new();
 
-        public async Task<AuthLoginResult?> LoginAsync(LoginRequest request, CancellationToken ct)
+        public async Task<(AuthLoginResult? Result, AuthErrorCode Error)> LoginAsync(LoginRequest request, CancellationToken ct)
         {
             string email = NormalizeEmail(request.Email);
+            if (!IsEmailValid(email))
+            {
+                return (null, AuthErrorCode.InvalidEmail); ;
+            }
             var user = await _repo.GetByEmailAsync(email, ct);
             if (user == null)
             {
-                return null;
+                return (null, AuthErrorCode.InvalidCredentials); ;
             }
             if (_hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) != PasswordVerificationResult.Success)
             {
-                return null;
+                return (null, AuthErrorCode.InvalidCredentials); ;
             }
+
+            var lastToken = await _repoToken.GetActiveByUserId(user.Id);
+            if (lastToken != null)
+            {
+                lastToken.RevokedAtUtc = DateTime.UtcNow;
+
+                await _repoToken.SaveChangesAsync(ct);
+            }
+
             var accessToken = _tokenService.CreateAccessToken(user);
 
             var refresh = _tokenService.CreateRefreshToken();
@@ -41,11 +55,43 @@ namespace Application.Auth.Services
             await _repoToken.AddAsync(refreshEntity, ct);
             await _repoToken.SaveChangesAsync(ct);
 
-            return new AuthLoginResult(
+            return (new AuthLoginResult(
                 AccessToken: accessToken,
                 RefreshTokenPlain: refresh.PlainToken,
                 RefreshTokenExpiresAtUtc: refresh.ExpiresAtUtc
-            );
+            ), AuthErrorCode.None);
+        }
+
+        public async Task<(AuthLoginResult? Result, AuthErrorCode Error)> RegisterAsync(RegisterRequest request, CancellationToken ct)
+        {
+            string email = NormalizeEmail(request.Email);
+            if (!IsEmailValid(email))
+            {
+                return (null, AuthErrorCode.InvalidEmail);
+            }
+            if (!IsPasswordStrong(request.Password))
+            {
+                return (null, AuthErrorCode.PasswordTooWeak);
+            }
+            if (request.Password != request.ConfirmPassword)
+            {
+                return (null, AuthErrorCode.InvalidCredentials);
+            }
+            var user = await _repo.GetByEmailAsync(email, ct);
+            if (user != null)
+            {
+                return (null, AuthErrorCode.EmailAlreadyExists); ;
+            }
+            var appUser = new AppUser
+            {
+                CreatedAtUtc = DateTime.UtcNow,
+                Email = email
+            };
+            appUser.PasswordHash = _hasher.HashPassword(appUser, request.Password);
+            await _repo.AddAsync(appUser, ct);
+            await _repo.SaveChangesAsync(ct);
+            var loginRequest = new LoginRequest(request.Email, request.Password);
+            return await LoginAsync(loginRequest, ct);
         }
 
         public async Task LogoutAsync(Guid userId, string? refreshTokenPlain, CancellationToken ct)
@@ -79,8 +125,7 @@ namespace Application.Auth.Services
 
             if (!existing.IsActive)
             {
-                // TOKEN REUSE DETECTED
-                await RevokeAllUserRefreshTokens(userId);
+                await RevokeAllUserRefreshTokens(userId, ct);
                 return null;
             }
 
@@ -116,11 +161,29 @@ namespace Application.Auth.Services
             );
         }
 
-        private static async Task RevokeAllUserRefreshTokens(Guid userId)
+        private async Task RevokeAllUserRefreshTokens(Guid userId, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            var lastToken = await _repoToken.GetActiveByUserId(userId);
+            if (lastToken != null)
+            {
+                lastToken.RevokedAtUtc = DateTime.UtcNow;
+
+                await _repoToken.SaveChangesAsync(ct);
+            }
         }
 
         private static string NormalizeEmail(string email) => (email ?? string.Empty).Trim().ToLowerInvariant();
+
+        private static bool IsEmailValid(string email)
+        {
+            string pattern = @"^((?!\.)[\w\-_.+]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$";
+            return Regex.IsMatch(email, pattern);
+        }
+
+        private static bool IsPasswordStrong(string password)
+        {
+            string pattern = @"^(?=(?:.*[A-Z]){1,})(?=(?:.*[a-z]){1,})(?=(?:.*\d){1,})(?=(?:.*[!@#$%^&*()\-_=+{};:,<.>]){1,})(?!.*(.)\1{2})([A-Za-z0-9!@#$%^&*()\-_=+{};:,<.>]{12,})";
+            return Regex.IsMatch(password, pattern);
+        }
     }
 }

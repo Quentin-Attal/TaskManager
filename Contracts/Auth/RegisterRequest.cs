@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Contracts.Auth
 {
-    public sealed record RegisterRequest(string Email, string Password);
+    public sealed record RegisterRequest(string Email, string Password, string ConfirmPassword);
 }
