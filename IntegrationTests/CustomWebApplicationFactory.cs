@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
@@ -43,6 +44,17 @@ namespace IntegrationTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Testing");
+
+            builder.ConfigureAppConfiguration((ctx, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Jwt:Key"] = "test-key-test-key-test-key-test-key",
+                    ["Jwt:Issuer"] = "MyApp",
+                    ["Jwt:Audience"] = "MyApp.Client",
+                    ["TokenHash:Pepper"] = "test-pepper"
+                });
+            });
 
             builder.ConfigureServices(services =>
             {
