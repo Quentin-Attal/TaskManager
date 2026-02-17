@@ -86,7 +86,7 @@ namespace API.Controllers
                     AuthErrorCode.InvalidEmail => "Format email is wrong",
                     AuthErrorCode.InvalidCredentials => "Password not match",
                     AuthErrorCode.PasswordTooWeak => "Password too weak",
-                    AuthErrorCode.EmailAlreadyExists => "Email alredy exist",
+                    AuthErrorCode.EmailAlreadyExists => "Email already exist",
                     _ => "Register failed",
                 };
                 var errorResponse = ApiResponse<bool>
@@ -95,7 +95,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("refresh")]
+        [HttpGet("refresh")]
         public async Task<IActionResult> Refresh(CancellationToken ct)
         {
             if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
@@ -122,7 +122,7 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpPost("logout")]
+        [HttpGet("logout")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
             var userId = User.GetUserId();

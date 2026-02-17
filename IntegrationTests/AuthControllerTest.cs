@@ -179,7 +179,7 @@ namespace IntegrationTests
             apiResponse.Should().NotBeNull();
             apiResponse.Success.Should().BeFalse();
             apiResponse.Data.Should().BeFalse();
-            apiResponse.Message.Should().Be("Email alredy exist");
+            apiResponse.Message.Should().Be("Email already exist");
         }
 
         [Fact]
@@ -196,7 +196,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Post_Refresh_Should_Return_200_When_Cookie_Is_Valid()
+        public async Task Get_Refresh_Should_Return_200_When_Cookie_Is_Valid()
         {
             var ct = TestContext.Current.CancellationToken;
 
@@ -210,7 +210,7 @@ namespace IntegrationTests
 
             setCookie.Should().NotBeNull();
 
-            using var refreshMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+            using var refreshMessage = new HttpRequestMessage(HttpMethod.Get, "/api/auth/refresh");
             refreshMessage.Headers.Add("Cookie", setCookie!.Split(';')[0]);
 
             var refreshResponse = await _client.SendAsync(refreshMessage, ct);
@@ -227,20 +227,20 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Post_Refresh_Should_Return_400_When_Cookie_Missing()
+        public async Task Get_Refresh_Should_Return_400_When_Cookie_Missing()
         {
             var ct = TestContext.Current.CancellationToken;
 
-            var response = await _client.PostAsync("/api/auth/refresh", content: null, cancellationToken: ct);
+            var response = await _client.GetAsync("/api/auth/refresh", cancellationToken: ct);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
         [Fact]
-        public async Task Post_Refresh_Should_Return_404_When_Cookie_Invalid()
+        public async Task Get_Refresh_Should_Return_404_When_Cookie_Invalid()
         {
             var ct = TestContext.Current.CancellationToken;
 
-            using var msg = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+            using var msg = new HttpRequestMessage(HttpMethod.Get, "/api/auth/refresh");
             msg.Headers.Add("Cookie", "refresh_token=invalid_token_value");
 
             var response = await _client.SendAsync(msg, ct);
@@ -253,11 +253,11 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Post_Logout_Should_Return_200_And_Delete_Cookie_When_Cookie_Present()
+        public async Task Get_Logout_Should_Return_200_And_Delete_Cookie_When_Cookie_Present()
         {
             var ct = TestContext.Current.CancellationToken;
 
-            using var msg = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
+            using var msg = new HttpRequestMessage(HttpMethod.Get, "/api/auth/logout");
             msg.Headers.Add("Cookie", "refresh_token=some_refresh_token");
 
             var response = await _client.SendAsync(msg, ct);

@@ -1,0 +1,527 @@
+{
+  "info": {
+    "_postman_id": "5e839ea2-d7ce-4a46-8c55-53825315c909",
+    "name": "TaskManager",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14017152",
+    "_collection_link": "https://go.postman.co/collection/14017152-5e839ea2-d7ce-4a46-8c55-53825315c909?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
+                  "}",
+                  "",
+                  "pm.test('Response has required fields', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('success');",
+                  "  pm.expect(jsonData).to.have.property('message');",
+                  "  pm.expect(jsonData).to.have.property('data');",
+                  "  pm.expect(jsonData).to.have.property('errors');",
+                  "});",
+                  "",
+                  "pm.test('Success field is true', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Data object contains accessToken and expirationDate', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('accessToken');",
+                  "  pm.expect(jsonData.data).to.have.property('expirationDate');",
+                  "});",
+                  "",
+                  "pm.test('AccessToken is a non-empty string', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.accessToken).to.be.a('string');",
+                  "  pm.expect(jsonData.data.accessToken).to.not.be.empty;",
+                  "});",
+                  "",
+                  "pm.test('ExpirationDate is a valid date string', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.expirationDate).to.be.a('string');",
+                  "  pm.expect(new Date(jsonData.data.expirationDate)).to.be.instanceof(Date);",
+                  "});",
+                  "",
+                  "pm.test('Errors field is null', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.errors).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"email@mail.com\",\r\n    \"password\": \"hashPasword12@\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "# Login Endpoint\n\n## Overview\n\nThis endpoint authenticates users by validating their credentials (email and password) and returns an access token for subsequent authenticated API requests.\n\n## Request Details\n\n**Endpoint:** `{{base_url}}/auth/login`  \n**Method:** `POST`  \n**Content-Type:** `application/json`\n\n## Request Body Parameters\n\nThe request body must be sent as JSON with the following required fields:\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `email` | string | Yes | The user's email address used for authentication |\n| `password` | string | Yes | The user's password (should be securely hashed on the client side) |\n\n### Example Request Body\n\n``` json\n{\n  \"email\": \"email@mail.com\",\n  \"password\": \"hashPasword12@\"\n}\n\n ```\n\n## Response Structure\n\nThe API returns a JSON object with the following structure:\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `success` | boolean | Indicates whether the login was successful |\n| `message` | string | A human-readable message describing the result |\n| `data` | object | Contains the authentication data (accessToken and expirationDate) |\n| `data.accessToken` | string | JWT token to be used for authenticating subsequent API requests |\n| `data.expirationDate` | string | The date when the access token expires (ISO 8601 format) |\n| `errors` | null/object | Contains error details if the request fails, null on success |\n\n## Success Response Example\n\n**Status Code:** `200 OK`\n\n``` json\n{\n  \"success\": true,\n  \"message\": \"Login sucessfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"expirationDate\": \"2026-03-19\"\n  },\n  \"errors\": null\n}\n\n ```\n\n## Notes\n\n- **Token Storage:** The post-response script automatically saves the `accessToken` to the environment variable `accessToken` for use in subsequent requests.\n    \n- **Token Usage:** Include the access token in the `Authorization` header as a Bearer token for authenticated endpoints: `Authorization: Bearer {accessToken}`\n    \n- **Token Expiration:** Monitor the `expirationDate` field to refresh the token before it expires.\n    \n- **Security:** Always use HTTPS in production to protect credentials during transmission.\n    \n- **Error Handling:** If authentication fails, the `success` field will be `false` and the `errors` field will contain details about the failure."
+          },
+          "response": [
+            {
+              "name": "Login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"email@mail.com\",\r\n    \"password\": \"hashPasword12@\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 17 Feb 2026 18:31:32 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Set-Cookie",
+                  "value": "refresh_token=ACiEu46KEt-AJiK45sn4Tpugj4jm2x6T2SwXtV6ME_Eo1u7tcCki8nHPe-amoQEgr5H9gAvzoOcNqsaKk5iFMQ; expires=Thu, 19 Mar 2026 18:31:32 GMT; path=/api/auth; secure; samesite=strict; httponly"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Login sucessfully\",\n    \"data\": {\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYzUwNzMxMi01MWI4LTQzMWQtOTVhMC1lYjZmOTAwNzMzOGMiLCJqdGkiOiI1ZmQ1ODcwYTk0MTc0ZTUxYTkwZmIxMGRiNzgyM2VhMSIsImlhdCI6MTc3MTM1MzA5MiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxYzUwNzMxMi01MWI4LTQzMWQtOTVhMC1lYjZmOTAwNzMzOGMiLCJuYmYiOjE3NzEzNTMwOTIsImV4cCI6MTc3MTM1Mzk5MiwiaXNzIjoieW91ci1hcGkiLCJhdWQiOiJ5b3VyLWNsaWVudCJ9.rGHMQN7EThlvQVk8K4jFq9vnwljOp8XQMBD85O0ePxY\",\n        \"expirationDate\": \"2026-03-19\"\n    },\n    \"errors\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('success');",
+                  "  pm.expect(jsonData).to.have.property('message');",
+                  "  pm.expect(jsonData).to.have.property('data');",
+                  "  pm.expect(jsonData).to.have.property('errors');",
+                  "});",
+                  "",
+                  "pm.test('Success field is true', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Data object contains accessToken and expirationDate', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('accessToken');",
+                  "  pm.expect(jsonData.data).to.have.property('expirationDate');",
+                  "});",
+                  "",
+                  "pm.test('AccessToken is a non-empty string', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.accessToken).to.be.a('string');",
+                  "  pm.expect(jsonData.data.accessToken).to.not.be.empty;",
+                  "});",
+                  "",
+                  "pm.test('Errors field is null', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.errors).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"accessToken\", null);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {\r",
+                  "  pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('Response has required fields', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData).to.have.property('success');\r",
+                  "  pm.expect(jsonData).to.have.property('message');\r",
+                  "  pm.expect(jsonData).to.have.property('data');\r",
+                  "  pm.expect(jsonData).to.have.property('errors');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('Success field is true', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData.success).to.be.true;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('Data object contains accessToken and expirationDate', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData.data).to.have.property('accessToken');\r",
+                  "  pm.expect(jsonData.data).to.have.property('expirationDate');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('AccessToken is a non-empty string', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData.data.accessToken).to.be.a('string');\r",
+                  "  pm.expect(jsonData.data.accessToken).to.not.be.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('ExpirationDate is a valid date string', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData.data.expirationDate).to.be.a('string');\r",
+                  "  pm.expect(new Date(jsonData.data.expirationDate)).to.be.instanceof(Date);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test('Errors field is null', () => {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "  pm.expect(jsonData.errors).to.be.null;\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "if (json && json.data && json.data.accessToken) {\r",
+                  "    pm.collectionVariables.set(\"accessToken\", json.data.accessToken);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"email@mail.com\",\r\n    \"password\": \"hashPasword12@\",\r\n    \"confirmPassword\": \"hashPasword12@\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "task",
+      "item": [
+        {
+          "name": "Get Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test 1: Verify response status is 200",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Test 2: Verify response has expected structure",
+                  "pm.test(\"Response has expected structure (success, message, data, errors)\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property(\"success\");",
+                  "    pm.expect(jsonData).to.have.property(\"message\");",
+                  "    pm.expect(jsonData).to.have.property(\"data\");",
+                  "    pm.expect(jsonData).to.have.property(\"errors\");",
+                  "});",
+                  "",
+                  "// Test 3: Verify success is true",
+                  "pm.test(\"Success field is true\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Test 4: Verify data is an array",
+                  "pm.test(\"Data field is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "// Test 5: Verify each task has correct fields with correct types",
+                  "pm.test(\"Each task has id, title, isDone, and createdAtUtc with correct types\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.data.forEach(function (task, index) {",
+                  "        pm.expect(task).to.have.property(\"id\").that.is.a(\"string\");",
+                  "        pm.expect(task).to.have.property(\"title\").that.is.a(\"string\");",
+                  "        pm.expect(task).to.have.property(\"isDone\").that.is.a(\"boolean\");",
+                  "        pm.expect(task).to.have.property(\"createdAtUtc\").that.is.a(\"string\");",
+                  "    });",
+                  "});",
+                  "",
+                  "// Test 6: Verify response time is reasonable (under 2000ms)",
+                  "pm.test(\"Response time is under 2000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"hello\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks/9bfb3fc2-f20d-4f54-9ae2-c56a05f56de9",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "9bfb3fc2-f20d-4f54-9ae2-c56a05f56de9"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks/9bfb3fc2-f20d-4f54-9ae2-c56a05f56de9",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "9bfb3fc2-f20d-4f54-9ae2-c56a05f56de9"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ]
+}

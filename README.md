@@ -41,6 +41,31 @@ Le repo est organisé en 4 couches :
 
 ---
 
+## 🔐 Authentication Model
+
+- Access Token (JWT): 5 minutes
+- Refresh Token: 30 days
+- Refresh token stored in HttpOnly cookie
+- Refresh tokens stored hashed in database
+- One active refresh token per user
+
+---
+
+### Flow
+
+1. Login:
+   - Returns access token
+   - Sets refresh token cookie
+2. Access token expires (5 min):
+   - Client calls /api/auth/refresh
+   - Server validates refresh token
+   - New access token is issued
+3. Logout:
+   - Refresh token revoked in database
+   - Cookie deleted
+
+---
+
 ## ⚙️ Configuration
 
 Crée un fichier `appsettings.json` (ou utilise des variables d’environnement) avec les sections suivantes (exemple) :
@@ -61,3 +86,14 @@ Crée un fichier `appsettings.json` (ou utilise des variables d’environnement)
     "Pepper": "PUT_A_SERVER_SIDE_PEPPER_HERE"
   }
 }
+```
+
+---
+
+## Future Improvements
+
+- Refresh token rotation
+- Multi-device session support
+- Device binding
+- Role-based authorization
+- Pagination and filtering on tasks

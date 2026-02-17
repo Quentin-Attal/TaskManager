@@ -1,4 +1,5 @@
 using API.Common.Serialization;
+using API.Mappings;
 using Application.Auth.Interfaces;
 using Application.Auth.Services;
 using Application.Common;
@@ -55,6 +56,8 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddAutoMapper(typeof(TaskMappingProfile).Assembly);
 
 builder.Services.Configure<JwtOptions>(
     builder.Configuration.GetSection(JwtOptions.SectionName));

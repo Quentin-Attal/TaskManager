@@ -1,6 +1,7 @@
 ﻿using API.Common.Extensions;
 using Application.Common;
 using Application.Tasks.Interfaces;
+using AutoMapper;
 using Contracts.Tasks;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -11,17 +12,19 @@ namespace API.Controllers
     [Authorize]
     [ApiController]
     [Route("api/tasks")]
-    public class TasksController(ITaskService service) : ControllerBase
+    public class TasksController(ITaskService service, IMapper mapper) : ControllerBase
     {
         private readonly ITaskService _service = service;
+        private readonly IMapper _mapper = mapper;
 
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken ct)
         {
             var userId = User.GetUserId();
             var tasks = await _service.GetAllAsync(userId, ct);
-            var response = ApiResponse<IEnumerable<TaskItem>>
-                .SuccessResponse(tasks, "Tasks retrieved successfully");
+            var answer = _mapper.Map<IEnumerable<TaskAnswers>>(tasks);
+            var response = ApiResponse<IEnumerable<TaskAnswers>>
+                .SuccessResponse(answer, "Tasks retrieved successfully");
             return Ok(response);
         }
 
@@ -31,8 +34,9 @@ namespace API.Controllers
             var userId = User.GetUserId();
 
             var task = await _service.CreateAsync(userId, request.Title, ct);
-            var response = ApiResponse<TaskItem>
-                .SuccessResponse(task, "Task created successfully");
+            var answer = _mapper.Map<TaskAnswers>(task);
+            var response = ApiResponse<TaskAnswers>
+                .SuccessResponse(answer, "Task created successfully");
             return Ok(response);
         }
 
@@ -61,7 +65,7 @@ namespace API.Controllers
             var task = await _service.DeleteAsync(userId, id, ct);
             if (!task)
             {
-                var errorResponse = ApiResponse<TaskItem>
+                var errorResponse = ApiResponse<TaskAnswers>
                     .FailureResponse("Task not found");
                 return NotFound(errorResponse);
             }
