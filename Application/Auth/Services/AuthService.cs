@@ -109,7 +109,7 @@ namespace Application.Auth.Services
                 await RevokeAllUserRefreshTokens(existing.UserId, ct);
                 return null;
             }
-            
+
             var user = existing.User;
             if (user is null)
             {
