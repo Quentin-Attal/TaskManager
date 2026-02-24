@@ -25,7 +25,7 @@ namespace Application.Tasks.Services
                 UserId = userId,
             };
 
-            await _repo.AddAsync(task, ct);
+            await _repo.AddAsync(task);
             await _repo.SaveChangesAsync(ct);
             return task;
         }

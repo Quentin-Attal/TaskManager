@@ -1,7 +1,5 @@
-﻿using API.Common.Serialization;
-using Application.Common;
+﻿using Application.Common;
 using Contracts.Auth;
-using Contracts.Tasks;
 using Domain.Entities;
 using FluentAssertions;
 using Infrastructure;
@@ -17,7 +15,6 @@ namespace IntegrationTests
     {
         private readonly HttpClient _client;
         private readonly CustomWebApplicationFactory _factory;
-        private readonly Guid _taskId = Guid.NewGuid();
         private readonly Guid _userId = Guid.NewGuid();
 
         public AuthControllerTest(CustomWebApplicationFactory factory)

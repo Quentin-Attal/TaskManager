@@ -1,43 +1,18 @@
 ﻿using Application.Repositories;
 using Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using Domain.Specification.User;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository(AppDbContext context) : IUserRepository
+    public class UserRepository: Repository<AppUser>, IUserRepository
     {
-        private readonly AppDbContext _context = context;
-
-        public async Task AddAsync(AppUser user, CancellationToken ct)
+        public UserRepository(ICRUDRepository<AppUser> repository) : base(repository)
         {
-            await _context.Users.AddAsync(user, ct);
         }
-
-        public async Task<AppUser?> GetByIdAsync(Guid id, CancellationToken ct)
-        {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
-        }
+        
         public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct)
         {
-            return await _context.Users.SingleOrDefaultAsync(u => u.Email == email, ct);
-        }
-
-        public async Task DeleteAsync(Guid id, CancellationToken ct)
-        {
-            var user = await GetByIdAsync(id, ct);
-            if (user != null)
-                _context.Users.Remove(user);
-        }
-
-        public Task UpdateAsync(AppUser user)
-        {
-            _context.Users.Update(user);
-            return Task.CompletedTask;
-        }
-
-        public async Task SaveChangesAsync(CancellationToken ct)
-        {
-            await _context.SaveChangesAsync(ct);
+            return await _crud.SingleOrDefaultAsync(new UserByEmailSpecification(email), ct);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Application.Auth.Services
                 ExpiresAtUtc = refresh.ExpiresAtUtc
             };
 
-            await _repoToken.AddAsync(refreshEntity, ct);
+            await _repoToken.AddAsync(refreshEntity);
             await _repoToken.SaveChangesAsync(ct);
 
             return (new AuthLoginResult(
@@ -80,7 +80,7 @@ namespace Application.Auth.Services
                 Email = email
             };
             appUser.PasswordHash = _hasher.HashPassword(appUser, request.Password);
-            await _repo.AddAsync(appUser, ct);
+            await _repo.AddAsync(appUser);
             await _repo.SaveChangesAsync(ct);
             var loginRequest = new LoginRequest(request.Email, request.Password);
             return await LoginAsync(loginRequest, ct);

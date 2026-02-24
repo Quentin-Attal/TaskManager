@@ -1,16 +1,10 @@
 ﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Application.Repositories
 {
-    public interface IRefreshTokenRepository
+    public interface IRefreshTokenRepository: IRepository<RefreshToken>
     {
         Task<RefreshToken?> FindByHashAsync(Guid id, string tokenHash, CancellationToken ct);
         Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct);
-        Task AddAsync(RefreshToken token, CancellationToken ct);
-        Task SaveChangesAsync(CancellationToken ct);
         Task<RefreshToken?> GetActiveByUserId(Guid id, CancellationToken ct);
         Task<List<RefreshToken>> GetActivesByUserId(Guid id, CancellationToken ct);
     }

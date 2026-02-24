@@ -61,7 +61,7 @@ namespace UnitTests
 
             Assert.NotNull(result);
             Assert.IsType<TaskItem>(result);
-            repoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>(), cancellationToken), Times.Once);
+            repoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>()), Times.Once);
             repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
         }
