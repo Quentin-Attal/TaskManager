@@ -1,7 +1,7 @@
 using Domain.Specification;
 using System.Linq.Expressions;
 
-namespace Infrastructure.Repositories
+namespace Application.Repositories
 {
     public interface ICRUDRepository<T> : IAsyncDisposable where T : class
     {

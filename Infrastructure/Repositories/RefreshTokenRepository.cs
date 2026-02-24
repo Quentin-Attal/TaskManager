@@ -4,12 +4,8 @@ using Domain.Specification.Refresh;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class RefreshTokenRepository: Repository<RefreshToken>, IRefreshTokenRepository
-    {   
-        public RefreshTokenRepository(ICRUDRepository<RefreshToken> repository) : base(repository)
-        {
-        }
-        
+    public sealed class RefreshTokenRepository(ICRUDRepository<RefreshToken> repository) : Repository<RefreshToken>(repository), IRefreshTokenRepository
+    {
         public Task<RefreshToken?> FindByHashAsync(Guid userId, string tokenHash, CancellationToken ct)
         {
             return _crud.SingleOrDefaultAsync(new RefreshTokenByTokenHashAndUserIdSpecification(userId, tokenHash), ct);

@@ -1,18 +1,14 @@
 using System.Linq.Expressions;
+using Application.Repositories;
 using Domain.Specification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Infrastructure.Repositories
 {
-    public class CRUDRepository<T> : ICRUDRepository<T>, IAsyncDisposable where T : class
+    public class CRUDRepository<T>(AppDbContext db) : ICRUDRepository<T>, IAsyncDisposable where T : class
     {
-        protected readonly AppDbContext _db;
-
-        public CRUDRepository(AppDbContext db)
-        {
-            _db = db;
-        }
+        protected readonly AppDbContext _db = db;
 
         public Task<T> AddAsync(T entity)
         {
@@ -22,7 +18,6 @@ namespace Infrastructure.Repositories
 
         public async Task<List<T>> AddAsync(List<T> entity, CancellationToken ct)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
             await _db.Set<T>().AddRangeAsync(entity, ct);
             return entity;
         }
@@ -32,7 +27,7 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(int id, CancellationToken ct)
         {
-            var entity = await _db.Set<T>().FindAsync(id, ct);
+            var entity = await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
             if (entity != null)
             {
                 _db.Set<T>().Remove(entity);
@@ -41,7 +36,7 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
-            var entity = await _db.Set<T>().FindAsync(id, ct);
+            var entity = await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
             if (entity != null)
             {
                 _db.Set<T>().Remove(entity);
@@ -74,8 +69,8 @@ namespace Infrastructure.Repositories
 
         public Task<List<T>> GetAllAsync(CancellationToken ct) => _db.Set<T>().ToListAsync(ct);
 
-        public async Task<T?> GetByIdAsync(int id, CancellationToken ct) => await _db.Set<T>().FindAsync(id, ct);
-        public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct) => await _db.Set<T>().FindAsync(id, ct);
+        public async Task<T?> GetByIdAsync(int id, CancellationToken ct) => await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
+        public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct) => await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
 
         public Task<List<T>> ListAsync(ISpecification<T> spec, CancellationToken ct) => ApplySpecification(spec).ToListAsync(ct);
 
@@ -84,16 +79,10 @@ namespace Infrastructure.Repositories
 
         public Task UpdateAsync(T entity)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-            IEntityType? entityType = _db.Model.FindEntityType(typeof(T));
-            if (entityType == null) throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in the model.");
-            IKey? primaryKey = entityType.FindPrimaryKey();
-            if (primaryKey == null) throw new InvalidOperationException($"Entity type {typeof(T).Name} does not have a primary key.");
-            object?[] keyValues = primaryKey.Properties
-                .Select(p => p.PropertyInfo?.GetValue(entity))
-                .ToArray();
-            if (keyValues == null || keyValues.Length == 0)
+            IEntityType? entityType = _db.Model.FindEntityType(typeof(T)) ?? throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in the model.");
+            IKey? primaryKey = entityType.FindPrimaryKey() ?? throw new InvalidOperationException($"Entity type {typeof(T).Name} does not have a primary key.");
+            object?[] keyValues = [.. primaryKey.Properties.Select(p => p.PropertyInfo?.GetValue(entity))];
+            if (keyValues is null || keyValues.Length == 0)
                 throw new InvalidOperationException($"Entity type {typeof(T).Name} does not have a valid primary key value.");
 
             // Try to find a tracked entity with the same key
@@ -102,7 +91,7 @@ namespace Infrastructure.Repositories
                     .Select(p => p.PropertyInfo?.GetValue(e))
                     .SequenceEqual(keyValues));
 
-            if (trackedEntity != null)
+            if (trackedEntity is not null)
             {
                 // Already tracked: update its values
                 _db.Entry(trackedEntity).CurrentValues.SetValues(entity);
@@ -121,7 +110,6 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateAsync(List<T> entities)
         {
-            if (entities == null) throw new ArgumentNullException(nameof(entities));
             foreach (var entity in entities)
             {
                 await UpdateAsync(entity);
@@ -155,6 +143,7 @@ namespace Infrastructure.Repositories
         public async ValueTask DisposeAsync()
         {
             await _db.DisposeAsync();
+            GC.SuppressFinalize(this);
         }
     }
 }

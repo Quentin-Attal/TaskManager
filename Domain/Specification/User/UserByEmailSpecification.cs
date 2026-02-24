@@ -2,11 +2,7 @@ using Domain.Entities;
 
 namespace Domain.Specification.User
 {
-    public class UserByEmailSpecification : Specification<AppUser>
+    public class UserByEmailSpecification(string email) : Specification<AppUser>(u => u.Email == email)
     {
-        public UserByEmailSpecification(string email)
-            : base(u => u.Email == email)
-        {
-        }
     }
 }

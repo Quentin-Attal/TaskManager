@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
 namespace Application.Repositories
 {
-    public interface IRefreshTokenRepository: IRepository<RefreshToken>
+    public interface IRefreshTokenRepository : IRepository<RefreshToken>
     {
         Task<RefreshToken?> FindByHashAsync(Guid id, string tokenHash, CancellationToken ct);
         Task<RefreshToken?> FindByHashAsync(string tokenHash, CancellationToken ct);

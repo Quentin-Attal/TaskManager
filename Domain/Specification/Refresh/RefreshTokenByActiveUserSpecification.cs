@@ -2,11 +2,7 @@ using Domain.Entities;
 
 namespace Domain.Specification.Refresh
 {
-    public class RefreshTokenByActiveUserSpecification : Specification<RefreshToken>
+    public class RefreshTokenByActiveUserSpecification(Guid userId) : Specification<RefreshToken>(rt => rt.UserId == userId && rt.RevokedAtUtc == null && rt.ExpiresAtUtc > DateTime.UtcNow)
     {
-        public RefreshTokenByActiveUserSpecification(Guid userId)
-            : base(rt => rt.UserId == userId && rt.RevokedAtUtc == null && rt.ExpiresAtUtc > DateTime.UtcNow)
-        {
-        }
     }
 }

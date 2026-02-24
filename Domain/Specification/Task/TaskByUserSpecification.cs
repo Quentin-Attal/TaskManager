@@ -2,11 +2,7 @@ using Domain.Entities;
 
 namespace Domain.Specification.Task
 {
-    public class TaskByUserSpecification : Specification<TaskItem>
+    public class TaskByUserSpecification(Guid userId) : Specification<TaskItem>(t => t.UserId == userId)
     {
-        public TaskByUserSpecification(Guid userId)
-            : base(t => t.UserId == userId)
-        {
-        }
     }
 }

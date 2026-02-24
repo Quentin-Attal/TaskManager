@@ -4,12 +4,8 @@ using Domain.Specification.Task;
 
 namespace Infrastructure.Repositories
 {
-    public class TaskRepository: Repository<TaskItem>, ITaskRepository
-    {   
-        public TaskRepository(ICRUDRepository<TaskItem> repository) : base(repository)
-        {
-        }
-
+    public class TaskRepository(ICRUDRepository<TaskItem> repository) : Repository<TaskItem>(repository), ITaskRepository
+    {
         public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
         {
             return await _crud.ListAsync(new TaskByUserSpecification(userId), ct);
