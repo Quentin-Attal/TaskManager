@@ -18,12 +18,12 @@ public partial class EFRepository<T>
         return entities;
     }
 
-    public void DeleteAsync(T entity)
+    public void Delete(T entity)
     {
         _db.Set<T>().Remove(entity);
     }
 
-    public void DeleteAsync(IEnumerable<T> entities)
+    public void Delete(IEnumerable<T> entities)
     {
         _db.Set<T>().RemoveRange(entities);
     }
@@ -48,7 +48,7 @@ public partial class EFRepository<T>
         await _db.Set<T>().Where(spec.Criteria).ExecuteDeleteAsync(ct);
     }
 
-    public void UpdateAsync(T entity)
+    public void Update(T entity)
     {
         IEntityType? entityType = _db.Model.FindEntityType(typeof(T)) ?? throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in the model.");
         IKey? primaryKey = entityType.FindPrimaryKey() ?? throw new InvalidOperationException($"Entity type {typeof(T).Name} does not have a primary key.");
@@ -77,9 +77,9 @@ public partial class EFRepository<T>
         _db.Entry(entity).State = EntityState.Modified;
     }
 
-    public async void UpdateAsync(List<T> entities)
+    public async void Update(List<T> entities)
     {
         foreach (var e in entities)
-            UpdateAsync(e);
+            Update(e);
     }
 }

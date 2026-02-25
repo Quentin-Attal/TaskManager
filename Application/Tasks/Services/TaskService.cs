@@ -4,11 +4,12 @@ using Domain.Entities;
 
 namespace Application.Tasks.Services
 {
-    public class TaskService(ITaskRepository repo) : ITaskService
+    public class TaskService(ITaskRepository repo, IUnitOfWork unitOfWork) : ITaskService
     {
         private readonly ITaskRepository _repo = repo;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-        public Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
+        public Task<List<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
             => _repo.GetAllAsync(userId, ct);
 
         public Task<TaskItem?> GetByIdAsync(Guid userId, Guid id, CancellationToken ct)
@@ -20,7 +21,7 @@ namespace Application.Tasks.Services
             var task = TaskItem.Create(userId, title, now);
 
             await _repo.AddAsync(task, ct);
-            await _repo.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             return task;
         }
 
@@ -30,7 +31,7 @@ namespace Application.Tasks.Services
             if (task is null) return false;
 
             task.MarkDone();
-            await _repo.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             return true;
         }
 
@@ -40,7 +41,7 @@ namespace Application.Tasks.Services
             if (existing is null) return false;
 
             await _repo.DeleteAsync(userId, id, ct);
-            await _repo.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             return true;
         }
     }

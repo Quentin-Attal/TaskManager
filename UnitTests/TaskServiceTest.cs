@@ -14,12 +14,18 @@ namespace UnitTests
             var userId = Guid.NewGuid();
 
             var repoMock = new Mock<ITaskRepository>();
-            var handler = new TaskService(repoMock.Object);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+
+            repoMock
+                .Setup(r => r.GetAllAsync(userId, cancellationToken))
+                .ReturnsAsync([]);
+            var handler = new TaskService(repoMock.Object, unitOfWorkMock.Object);
+
 
             var result = await handler.GetAllAsync(userId, cancellationToken);
 
             Assert.NotNull(result);
-            Assert.IsType<IEnumerable<TaskItem>>(result, exactMatch: false);
+            Assert.IsType<List<TaskItem>>(result, exactMatch: false);
             repoMock.Verify(r => r.GetAllAsync(userId, cancellationToken), Times.Once);
         }
 
@@ -30,7 +36,8 @@ namespace UnitTests
             var userId = Guid.NewGuid();
 
             var repoMock = new Mock<ITaskRepository>();
-            var handler = new TaskService(repoMock.Object);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var handler = new TaskService(repoMock.Object, unitOfWorkMock.Object);
             var id = Guid.NewGuid();
             var now = DateTime.UtcNow;
             var expectedTask = new TaskItem(id, userId, title: "Test", now);
@@ -56,14 +63,15 @@ namespace UnitTests
             var userId = Guid.NewGuid();
 
             var repoMock = new Mock<ITaskRepository>();
-            var handler = new TaskService(repoMock.Object);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var handler = new TaskService(repoMock.Object, unitOfWorkMock.Object);
 
             var result = await handler.CreateAsync(userId, "hello", cancellationToken);
 
             Assert.NotNull(result);
             Assert.IsType<TaskItem>(result);
             repoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>(), cancellationToken), Times.Once);
-            repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
         }
 
@@ -74,7 +82,8 @@ namespace UnitTests
             var userId = Guid.NewGuid();
 
             var repoMock = new Mock<ITaskRepository>();
-            var handler = new TaskService(repoMock.Object);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var handler = new TaskService(repoMock.Object, unitOfWorkMock.Object);
             var id = Guid.NewGuid();
             var now = DateTime.UtcNow;
             var expectedTask = new TaskItem(id, userId, title: "Test", now);
@@ -88,7 +97,7 @@ namespace UnitTests
             Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
 
-            repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
             id = Guid.NewGuid();
             result = await handler.MarkDoneAsync(userId, id, cancellationToken);
@@ -104,7 +113,8 @@ namespace UnitTests
             var userId = Guid.NewGuid();
 
             var repoMock = new Mock<ITaskRepository>();
-            var handler = new TaskService(repoMock.Object);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var handler = new TaskService(repoMock.Object, unitOfWorkMock.Object); ;
             var id = Guid.NewGuid();
             var now = DateTime.UtcNow;
             var expectedTask = new TaskItem(id, userId, title: "Test", now);
@@ -118,7 +128,7 @@ namespace UnitTests
             Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             repoMock.Verify(r => r.DeleteAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
-            repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
             id = Guid.NewGuid();
             result = await handler.DeleteAsync(userId, id, cancellationToken);

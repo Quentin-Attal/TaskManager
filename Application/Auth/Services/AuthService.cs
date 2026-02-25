@@ -8,11 +8,12 @@ using System.Text.RegularExpressions;
 
 namespace Application.Auth.Services
 {
-    public class AuthService(IUserRepository repo, IRefreshTokenRepository repoToken, ITokenService tokenService) : IAuthService
+    public class AuthService(IUserRepository repo, IRefreshTokenRepository repoToken, ITokenService tokenService, IUnitOfWork unitOfWork) : IAuthService
     {
         private readonly IUserRepository _repo = repo;
         private readonly IRefreshTokenRepository _repoToken = repoToken;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         private readonly PasswordHasher<AppUser> _hasher = new();
 
@@ -40,7 +41,7 @@ namespace Application.Auth.Services
             var refreshEntity = RefreshToken.Create(user.Id, refresh.TokenHash, now, refresh.ExpiresAtUtc);
 
             await _repoToken.AddAsync(refreshEntity, ct);
-            await _repoToken.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
 
             return (new AuthLoginResult(
                 AccessToken: accessToken,
@@ -74,7 +75,7 @@ namespace Application.Auth.Services
             var appUser = AppUser.Create(email, now);
             appUser.SetPasswordHash(_hasher.HashPassword(appUser, request.Password));
             await _repo.AddAsync(appUser, ct);
-            await _repo.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             var loginRequest = new LoginRequest(request.Email, request.Password);
             return await LoginAsync(loginRequest, ct);
         }
@@ -119,7 +120,7 @@ namespace Application.Auth.Services
             existing.Revoke(now, refresh.TokenHash);
 
             await _repoToken.AddAsync(refreshEntity, ct);
-            await _repoToken.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
 
             return new AuthRefreshResult(
                 AccessToken: accessToken,
@@ -138,7 +139,7 @@ namespace Application.Auth.Services
                 token.Revoke(now);
             }
 
-            await _repoToken.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
 
         private static string NormalizeEmail(string email) => (email ?? string.Empty).Trim().ToLowerInvariant();

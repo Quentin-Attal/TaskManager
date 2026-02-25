@@ -8,7 +8,7 @@ namespace Infrastructure.Repositories
 {
     public class TaskRepository(IEFRepository<TaskItem> repository) : BaseRepository<TaskItem>(repository), ITaskRepository
     {
-        public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
+        public async Task<List<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
         {
             return await _crud.ListAsync(new TaskByUserSpecification(userId), QueryOptions.ReadOnly, ct);
         }
@@ -23,7 +23,7 @@ namespace Infrastructure.Repositories
         {
             var task = await GetByIdAsync(userId, id, ct);
             if (task != null)
-                _crud.DeleteAsync(task);
+                _crud.Delete(task);
         }
 
     }

@@ -24,9 +24,4 @@ public partial class EFRepository<T>(AppDbContext db) : IEFRepository<T> where T
     private IQueryable<T> ApplySpecification(ISpecification<T> spec, QueryOptions options)
         => SpecificationEvaluator<T>.GetQuery(BuildQuery(options), spec);
 
-    public async ValueTask DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        GC.SuppressFinalize(this);
-    }
 }

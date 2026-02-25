@@ -24,6 +24,7 @@ namespace UnitTests
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
 
             var hasher = new PasswordHasher<AppUser>();
             var now = DateTime.UtcNow;
@@ -51,7 +52,7 @@ namespace UnitTests
                     It.IsAny<string>()))
                 .Returns(PasswordVerificationResult.Success);
 
-            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object, unitOfWorkMock.Object);
 
             var result = await handler.LoginAsync(loginRequest, cancellationToken);
             Assert.IsType<(AuthLoginResult, AuthErrorCode)>(result, exactMatch: true);
@@ -61,7 +62,7 @@ namespace UnitTests
             serviceTokenMock.Verify(r => r.CreateRefreshToken(It.IsAny<DateTime>()), Times.Once);
 
             repoRefreshTokenMock.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), cancellationToken), Times.Once);
-            repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 
 
@@ -77,6 +78,7 @@ namespace UnitTests
             var repoUserMock = new Mock<IUserRepository>();
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
 
             var hasher = new PasswordHasher<AppUser>();
 
@@ -94,13 +96,13 @@ namespace UnitTests
                 .Setup(s => s.CreateAccessToken(It.IsAny<AppUser>()))
                 .Returns("access-token");
 
-            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object, unitOfWorkMock.Object);
 
             var result = await handler.RegisterAsync(loginRequest, cancellationToken);
             Assert.IsType<(AuthLoginResult, AuthErrorCode)>(result, exactMatch: true);
             repoUserMock.Verify(r => r.GetByEmailAsync(email, cancellationToken), Times.Exactly(2));
             repoUserMock.Verify(r => r.AddAsync(It.IsAny<AppUser>(), cancellationToken), Times.Once);
-            repoUserMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
         }
 
@@ -115,6 +117,7 @@ namespace UnitTests
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
 
             var now = DateTime.UtcNow;
             var expired = now.AddDays(2);
@@ -126,12 +129,12 @@ namespace UnitTests
                 .Setup(s => s.GetActivesByUserId(userId, cancellationToken))
                 .ReturnsAsync([token]);
 
-            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object, unitOfWorkMock.Object);
 
             await handler.LogoutAsync(userId, cancellationToken);
 
             repoRefreshTokenMock.Verify(r => r.GetActivesByUserId(userId, cancellationToken), Times.Once);
-            repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
+            unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 
         [Fact]
@@ -145,6 +148,8 @@ namespace UnitTests
             var repoUserMock = new Mock<IUserRepository>();
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+
             var now = DateTime.UtcNow;
             var expired = now.AddDays(2);
 
@@ -171,7 +176,7 @@ namespace UnitTests
                 .ReturnsAsync(user);
 
 
-            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object, unitOfWorkMock.Object);
 
             var result = await handler.RefreshAsync("hash", cancellationToken);
 
@@ -187,26 +192,24 @@ namespace UnitTests
         [Fact]
         public async Task LoginAsync_Should_QueryUserByNormalizedEmail()
         {
-            // Arrange
-            var userRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var tokenRepo = new Mock<IRefreshTokenRepository>(MockBehavior.Loose);
-            var tokenService = new Mock<ITokenService>(MockBehavior.Loose);
+            var repoUserMock = new Mock<IUserRepository>(MockBehavior.Strict);
+            var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>(MockBehavior.Loose);
+            var serviceTokenMock = new Mock<ITokenService>(MockBehavior.Loose);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
 
             var ct = CancellationToken.None;
             var req = new LoginRequest("  TeSt@Example.COM  ", "whatever");
 
             // Expect normalized email
-            userRepo
+            repoUserMock
                 .Setup(r => r.GetByEmailAsync("test@example.com", ct))
                 .ReturnsAsync((AppUser?)null);
 
-            var sut = new AuthService(userRepo.Object, tokenRepo.Object, tokenService.Object);
+            var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object, unitOfWorkMock.Object);
 
-            // Act
-            await sut.LoginAsync(req, ct);
+            await handler.LoginAsync(req, ct);
 
-            // Assert
-            userRepo.VerifyAll();
+            repoUserMock.VerifyAll();
         }
     }
 }
