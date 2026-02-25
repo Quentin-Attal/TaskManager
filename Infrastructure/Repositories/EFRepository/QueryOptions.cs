@@ -1,4 +1,4 @@
-﻿namespace Infrastructure.Repositories;
+﻿namespace Infrastructure.Repositories.EFRepository;
 
 public sealed record QueryOptions(
     bool AsNoTracking = false,

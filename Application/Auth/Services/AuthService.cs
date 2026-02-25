@@ -39,7 +39,7 @@ namespace Application.Auth.Services
             var refresh = _tokenService.CreateRefreshToken(now);
             var refreshEntity = RefreshToken.Create(user.Id, refresh.TokenHash, now, refresh.ExpiresAtUtc);
 
-            await _repoToken.AddAsync(refreshEntity);
+            await _repoToken.AddAsync(refreshEntity, ct);
             await _repoToken.SaveChangesAsync(ct);
 
             return (new AuthLoginResult(
@@ -73,7 +73,7 @@ namespace Application.Auth.Services
 
             var appUser = AppUser.Create(email, now);
             appUser.SetPasswordHash(_hasher.HashPassword(appUser, request.Password));
-            await _repo.AddAsync(appUser);
+            await _repo.AddAsync(appUser, ct);
             await _repo.SaveChangesAsync(ct);
             var loginRequest = new LoginRequest(request.Email, request.Password);
             return await LoginAsync(loginRequest, ct);
@@ -118,7 +118,7 @@ namespace Application.Auth.Services
 
             existing.Revoke(now, refresh.TokenHash);
 
-            await _repoToken.AddAsync(refreshEntity);
+            await _repoToken.AddAsync(refreshEntity, ct);
             await _repoToken.SaveChangesAsync(ct);
 
             return new AuthRefreshResult(

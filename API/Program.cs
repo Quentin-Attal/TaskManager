@@ -10,6 +10,8 @@ using Infrastructure;
 using Infrastructure.Auth.Options;
 using Infrastructure.Auth.Services;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Abstractions;
+using Infrastructure.Repositories.EFRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +30,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
-builder.Services.AddScoped(typeof(IEFCRUDRepository<>), typeof(EFCRUDRepository<>));
-builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped(typeof(IEFRepository<>), typeof(EFRepository<>));
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

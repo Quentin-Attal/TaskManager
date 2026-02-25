@@ -1,7 +1,7 @@
 using Domain.Specification;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Repositories.EFRepository
 {
     public class SpecificationEvaluator<T> where T : class
     {

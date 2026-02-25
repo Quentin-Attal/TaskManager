@@ -19,7 +19,7 @@ namespace Application.Tasks.Services
             var now = DateTime.UtcNow;
             var task = TaskItem.Create(userId, title, now);
 
-            await _repo.AddAsync(task);
+            await _repo.AddAsync(task, ct);
             await _repo.SaveChangesAsync(ct);
             return task;
         }

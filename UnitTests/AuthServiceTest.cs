@@ -60,7 +60,7 @@ namespace UnitTests
             serviceTokenMock.Verify(r => r.CreateAccessToken(It.IsAny<AppUser>()), Times.Once);
             serviceTokenMock.Verify(r => r.CreateRefreshToken(It.IsAny<DateTime>()), Times.Once);
 
-            repoRefreshTokenMock.Verify(r => r.AddAsync(It.IsAny<RefreshToken>()), Times.Once);
+            repoRefreshTokenMock.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), cancellationToken), Times.Once);
             repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
         }
 
@@ -99,7 +99,7 @@ namespace UnitTests
             var result = await handler.RegisterAsync(loginRequest, cancellationToken);
             Assert.IsType<(AuthLoginResult, AuthErrorCode)>(result, exactMatch: true);
             repoUserMock.Verify(r => r.GetByEmailAsync(email, cancellationToken), Times.Exactly(2));
-            repoUserMock.Verify(r => r.AddAsync(It.IsAny<AppUser>()), Times.Once);
+            repoUserMock.Verify(r => r.AddAsync(It.IsAny<AppUser>(), cancellationToken), Times.Once);
             repoUserMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
         }
