@@ -2,7 +2,7 @@
 
 namespace Application.Repositories
 {
-    public interface IUserRepository : IRepository<AppUser>
+    public interface IUserRepository : IBaseRepository<AppUser>
     {
         Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct);
     }

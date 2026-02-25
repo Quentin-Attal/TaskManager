@@ -4,7 +4,7 @@ using Domain.Specification.User;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository(ICRUDRepository<AppUser> repository) : Repository<AppUser>(repository), IUserRepository
+    public class UserRepository(IEFCRUDRepository<AppUser> repository) : BaseRepository<AppUser>(repository), IUserRepository
     {
         public async Task<AppUser?> GetByEmailAsync(string email, CancellationToken ct)
         {

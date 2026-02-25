@@ -37,20 +37,15 @@ namespace IntegrationTests
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            db.Tasks.Add(new TaskItem
-            {
-                Id = _taskId,
-                Title = "Seed 1",
-                CreatedAtUtc = DateTime.UtcNow,
-                IsDone = false,
-                AppUser = new AppUser
-                {
-                    Id = _userId,
-                    Email = "mail.com",
-                    PasswordHash = "hash",
-                    CreatedAtUtc = DateTime.UtcNow,
-                },
-            });
+            var now = DateTime.UtcNow;
+            var email = "email@email.com";
+
+            var task = new TaskItem(_taskId, _userId, title: "Seed 1", now);
+            var user = new AppUser(_userId, email, now);
+            user.SetPasswordHash("hash");
+
+            await db.Users.AddAsync(user);
+            await db.Tasks.AddAsync(task);
 
             await db.SaveChangesAsync();
         }
@@ -63,7 +58,7 @@ namespace IntegrationTests
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<TaskItem>>>(cancellationToken: cancellationToken);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<TaskAnswers>>>(cancellationToken: cancellationToken);
 
             apiResponse.Should().NotBeNull();
             apiResponse.Success.Should().BeTrue();
@@ -82,7 +77,7 @@ namespace IntegrationTests
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TaskItem>>(cancellationToken: cancellationToken);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TaskAnswers>>(cancellationToken: cancellationToken);
 
             apiResponse.Should().NotBeNull();
             apiResponse.Success.Should().BeTrue();

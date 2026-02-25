@@ -21,28 +21,23 @@ namespace Application.Auth.Services
             string email = NormalizeEmail(request.Email);
             if (!IsEmailValid(email))
             {
-                return (null, AuthErrorCode.InvalidEmail); ;
+                return (null, AuthErrorCode.InvalidEmail);
             }
             var user = await _repo.GetByEmailAsync(email, ct);
             if (user == null)
             {
-                return (null, AuthErrorCode.InvalidCredentials); ;
+                return (null, AuthErrorCode.InvalidCredentials);
             }
             if (_hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) != PasswordVerificationResult.Success)
             {
-                return (null, AuthErrorCode.InvalidCredentials); ;
+                return (null, AuthErrorCode.InvalidCredentials);
             }
 
             var accessToken = _tokenService.CreateAccessToken(user);
 
-            var refresh = _tokenService.CreateRefreshToken();
-
-            var refreshEntity = new RefreshToken
-            {
-                UserId = user.Id,
-                TokenHash = refresh.TokenHash,
-                ExpiresAtUtc = refresh.ExpiresAtUtc
-            };
+            var now = DateTime.UtcNow;
+            var refresh = _tokenService.CreateRefreshToken(now);
+            var refreshEntity = RefreshToken.Create(user.Id, refresh.TokenHash, now, refresh.ExpiresAtUtc);
 
             await _repoToken.AddAsync(refreshEntity);
             await _repoToken.SaveChangesAsync(ct);
@@ -67,19 +62,17 @@ namespace Application.Auth.Services
             }
             if (request.Password != request.ConfirmPassword)
             {
-                return (null, AuthErrorCode.InvalidCredentials);
+                return (null, AuthErrorCode.PasswordNotMatch);
             }
             var user = await _repo.GetByEmailAsync(email, ct);
             if (user != null)
             {
-                return (null, AuthErrorCode.EmailAlreadyExists); ;
+                return (null, AuthErrorCode.EmailAlreadyExists);
             }
-            var appUser = new AppUser
-            {
-                CreatedAtUtc = DateTime.UtcNow,
-                Email = email
-            };
-            appUser.PasswordHash = _hasher.HashPassword(appUser, request.Password);
+            var now = DateTime.UtcNow;
+
+            var appUser = AppUser.Create(email, now);
+            appUser.SetPasswordHash(_hasher.HashPassword(appUser, request.Password));
             await _repo.AddAsync(appUser);
             await _repo.SaveChangesAsync(ct);
             var loginRequest = new LoginRequest(request.Email, request.Password);
@@ -98,46 +91,54 @@ namespace Application.Auth.Services
                 return null;
             }
 
+            var now = DateTime.UtcNow;
             var hash = _tokenService.HashRefreshToken(refreshTokenPlain);
 
-            var existing = await _repoToken.FindByHashAsync(hash, ct);
+            var existing = await _repoToken.FindByHashWithUserAsync(hash, ct);
             if (existing is null)
                 return null;
 
-            if (!existing.IsActive)
+            if (!existing.IsActive(now))
             {
                 await RevokeAllUserRefreshTokens(existing.UserId, ct);
                 return null;
             }
 
-            var user = existing.User;
+            var user = existing.User ?? await _repo.GetByIdAsync(existing.UserId, ct);
             if (user is null)
             {
-                user = await _repo.GetByIdAsync(existing.UserId, ct);
-                if (user is null) return null;
+                return null;
             }
 
             var accessToken = _tokenService.CreateAccessToken(user);
 
+            var refresh = _tokenService.CreateRefreshToken(now);
+
+            var refreshEntity = RefreshToken.Create(user.Id, refresh.TokenHash, now, refresh.ExpiresAtUtc);
+
+            existing.Revoke(now, refresh.TokenHash);
+
+            await _repoToken.AddAsync(refreshEntity);
+            await _repoToken.SaveChangesAsync(ct);
+
             return new AuthRefreshResult(
                 AccessToken: accessToken,
-                RefreshTokenPlain: null,
-                RefreshTokenExpiresAtUtc: null
+                RefreshTokenPlain: refresh.PlainToken,
+                RefreshTokenExpiresAtUtc: refresh.ExpiresAtUtc
             );
         }
 
         private async Task RevokeAllUserRefreshTokens(Guid userId, CancellationToken ct)
         {
-            var lastToken = await _repoToken.GetActivesByUserId(userId, ct);
-            if (lastToken != null)
+            var tokens = await _repoToken.GetActivesByUserId(userId, ct);
+            if (tokens.Count == 0) return;
+            var now = DateTime.UtcNow;
+            foreach (var token in tokens)
             {
-                foreach (var item in lastToken)
-                {
-                    item.RevokedAtUtc = DateTime.UtcNow;
-                }
-
-                await _repoToken.SaveChangesAsync(ct);
+                token.Revoke(now);
             }
+
+            await _repoToken.SaveChangesAsync(ct);
         }
 
         private static string NormalizeEmail(string email) => (email ?? string.Empty).Trim().ToLowerInvariant();

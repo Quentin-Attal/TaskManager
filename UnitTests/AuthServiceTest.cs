@@ -26,12 +26,10 @@ namespace UnitTests
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
 
             var hasher = new PasswordHasher<AppUser>();
+            var now = DateTime.UtcNow;
 
-            var user = new AppUser
-            {
-                Email = email
-            };
-            user.PasswordHash = hasher.HashPassword(user, password);
+            var user = AppUser.Create(email, now);
+            user.SetPasswordHash(hasher.HashPassword(user, password));
 
             repoUserMock
                 .Setup(r => r.GetByEmailAsync(email, cancellationToken))
@@ -43,7 +41,7 @@ namespace UnitTests
 
             // Whatever your refresh token return type is—adjust accordingly
             serviceTokenMock
-                .Setup(s => s.CreateRefreshToken())
+                .Setup(s => s.CreateRefreshToken(It.IsAny<DateTime>()))
                 .Returns(new RefreshTokenDescriptor("plain", "hash", DateTime.UtcNow.AddDays(7)));
 
             hasherMock
@@ -60,7 +58,7 @@ namespace UnitTests
             repoUserMock.Verify(r => r.GetByEmailAsync(email, cancellationToken), Times.Once);
 
             serviceTokenMock.Verify(r => r.CreateAccessToken(It.IsAny<AppUser>()), Times.Once);
-            serviceTokenMock.Verify(r => r.CreateRefreshToken(), Times.Once);
+            serviceTokenMock.Verify(r => r.CreateRefreshToken(It.IsAny<DateTime>()), Times.Once);
 
             repoRefreshTokenMock.Verify(r => r.AddAsync(It.IsAny<RefreshToken>()), Times.Once);
             repoRefreshTokenMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
@@ -83,11 +81,10 @@ namespace UnitTests
             var hasher = new PasswordHasher<AppUser>();
 
 
-            var user = new AppUser
-            {
-                Email = email
-            };
-            user.PasswordHash = hasher.HashPassword(user, password);
+            var now = DateTime.UtcNow;
+
+            var user = AppUser.Create(email, now);
+            user.SetEmail(hasher.HashPassword(user, password));
 
             repoUserMock
                 .Setup(r => r.GetByEmailAsync(email, cancellationToken))
@@ -119,12 +116,10 @@ namespace UnitTests
             var serviceTokenMock = new Mock<ITokenService>();
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
 
-            var token = new RefreshToken()
-            {
-                TokenHash = hash,
-                UserId = userId,
-                ExpiresAtUtc = DateTime.UtcNow.AddDays(2),
-            };
+            var now = DateTime.UtcNow;
+            var expired = now.AddDays(2);
+
+            var token = RefreshToken.Create(userId, hash, now, expired);
 
             // Whatever your refresh token return type is—adjust accordingly
             repoRefreshTokenMock
@@ -150,23 +145,16 @@ namespace UnitTests
             var repoUserMock = new Mock<IUserRepository>();
             var repoRefreshTokenMock = new Mock<IRefreshTokenRepository>();
             var serviceTokenMock = new Mock<ITokenService>();
+            var now = DateTime.UtcNow;
+            var expired = now.AddDays(2);
 
-            var token = new RefreshToken()
-            {
-                TokenHash = hash,
-                UserId = userId,
-                ExpiresAtUtc = DateTime.UtcNow.AddDays(2),
-            };
+            var user = AppUser.Create(email, now);
 
-            var user = new AppUser
-            {
-                Email = email,
-                Id = userId
-            };
+            var token = RefreshToken.Create(userId, hash, now, expired);
 
             // Whatever your refresh token return type is—adjust accordingly
             repoRefreshTokenMock
-                .Setup(s => s.FindByHashAsync(hash, cancellationToken))
+                .Setup(s => s.FindByHashWithUserAsync(hash, cancellationToken))
                 .ReturnsAsync(token);
 
             serviceTokenMock
@@ -174,8 +162,8 @@ namespace UnitTests
                 .Returns(hash);
 
             serviceTokenMock
-                .Setup(s => s.CreateRefreshToken())
-                .Returns(new RefreshTokenDescriptor("token", "hash", new DateTime().AddDays(7)));
+                .Setup(s => s.CreateRefreshToken(It.IsAny<DateTime>()))
+                .Returns(new RefreshTokenDescriptor("token", "hash", expired));
 
 
             repoUserMock
@@ -185,7 +173,7 @@ namespace UnitTests
 
             var handler = new AuthService(repoUserMock.Object, repoRefreshTokenMock.Object, serviceTokenMock.Object);
 
-            var result = await handler.RefreshAsync(hash, cancellationToken);
+            var result = await handler.RefreshAsync("hash", cancellationToken);
 
             Assert.NotNull(result);
             Assert.IsType<AuthRefreshResult>(result, exactMatch: true);
@@ -193,7 +181,7 @@ namespace UnitTests
             serviceTokenMock.Verify(r => r.HashRefreshToken(hash), Times.Once);
             serviceTokenMock.Verify(r => r.CreateAccessToken(user), Times.Once);
 
-            repoRefreshTokenMock.Verify(r => r.FindByHashAsync(hash, cancellationToken), Times.Once);
+            repoRefreshTokenMock.Verify(r => r.FindByHashWithUserAsync(hash, cancellationToken), Times.Once);
         }
 
         [Fact]

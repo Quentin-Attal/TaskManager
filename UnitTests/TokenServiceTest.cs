@@ -1,5 +1,6 @@
 ﻿using Contracts.Auth;
 using Domain.Entities;
+using Domain.Exceptions;
 using Infrastructure.Auth.Options;
 using Infrastructure.Auth.Services;
 using Microsoft.AspNetCore.Identity;
@@ -24,12 +25,9 @@ namespace UnitTests
                 RefreshTokenDays = 7
             };
             string email = "email@mail.com";
+            var now = DateTime.UtcNow;
 
-            var user = new AppUser
-            {
-                Email = email,
-                Id = Guid.NewGuid(),
-            };
+            var user = AppUser.Create(email, now);
 
             var sut = CreateSut(option);
             var token = sut.CreateAccessToken(user);
@@ -54,12 +52,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public void CreateAccessToken_WhenUserIdEmpty_Throws()
+        public void AppUser_WhenIdEmpty_Throws()
         {
-            var sut = CreateSut();
-            var user = new AppUser { Id = Guid.Empty };
-
-            Assert.Throws<ArgumentException>(() => sut.CreateAccessToken(user));
+            var now = DateTime.UtcNow;
+            var ex = Assert.Throws<DomainException>(() => new AppUser(Guid.Empty, "a@b.com", now));
+            Assert.Equal("User id cannot be empty.", ex.Message);
         }
     }
 }

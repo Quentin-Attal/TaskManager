@@ -1,9 +1,9 @@
 using Domain.Specification;
 using System.Linq.Expressions;
 
-namespace Application.Repositories
+namespace Infrastructure.Repositories
 {
-    public interface ICRUDRepository<T> : IAsyncDisposable where T : class
+    public interface IEFCRUDRepository<T> : IAsyncDisposable where T : class
     {
         // Create
         Task<T> AddAsync(T entity);
@@ -38,10 +38,6 @@ namespace Application.Repositories
         Task CommitTransactionAsync(CancellationToken cancellationToken);
         Task RollbackTransactionAsync(CancellationToken cancellationToken);
 
-        // Querying
-        IQueryable<TEntity> GetQuery<TEntity>() where TEntity : class;
-        IQueryable<TEntity> GetQuery<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class;
-        IQueryable<TEntity> GetQuery<TEntity>(ISpecification<TEntity> criteria) where TEntity : class;
 
         // Save changes
         Task SaveChangesAsync(CancellationToken cancellationToken);

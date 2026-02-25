@@ -32,7 +32,8 @@ namespace UnitTests
             var repoMock = new Mock<ITaskRepository>();
             var handler = new TaskService(repoMock.Object);
             var id = Guid.NewGuid();
-            var expectedTask = new TaskItem { Id = id, Title = "Test", IsDone = false, CreatedAtUtc = DateTime.UtcNow };
+            var now = DateTime.UtcNow;
+            var expectedTask = new TaskItem(id, userId, title: "Test", now);
             repoMock.Setup(r => r.GetByIdAsync(userId, id, cancellationToken)).ReturnsAsync(expectedTask);
 
             var result = await handler.GetByIdAsync(userId, id, cancellationToken);
@@ -75,7 +76,10 @@ namespace UnitTests
             var repoMock = new Mock<ITaskRepository>();
             var handler = new TaskService(repoMock.Object);
             var id = Guid.NewGuid();
-            var expectedTask = new TaskItem { Id = id, Title = "Test", IsDone = true, CreatedAtUtc = DateTime.UtcNow };
+            var now = DateTime.UtcNow;
+            var expectedTask = new TaskItem(id, userId, title: "Test", now);
+            expectedTask.MarkDone();
+
             repoMock.Setup(r => r.GetByIdAsync(userId, id, cancellationToken)).ReturnsAsync(expectedTask);
 
             var result = await handler.MarkDoneAsync(userId, id, cancellationToken);
@@ -83,7 +87,7 @@ namespace UnitTests
             Assert.IsType<Boolean>(result);
             Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
-            repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Once);
+
             repoMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
             id = Guid.NewGuid();
@@ -91,7 +95,6 @@ namespace UnitTests
 
             Assert.False(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Exactly(2));
-            repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Once);
         }
 
         [Fact]
@@ -103,7 +106,10 @@ namespace UnitTests
             var repoMock = new Mock<ITaskRepository>();
             var handler = new TaskService(repoMock.Object);
             var id = Guid.NewGuid();
-            var expectedTask = new TaskItem { Id = id, Title = "Test", IsDone = true, CreatedAtUtc = DateTime.UtcNow };
+            var now = DateTime.UtcNow;
+            var expectedTask = new TaskItem(id, userId, title: "Test", now);
+            expectedTask.MarkDone();
+
             repoMock.Setup(r => r.GetByIdAsync(userId, id, cancellationToken)).ReturnsAsync(expectedTask);
 
             var result = await handler.DeleteAsync(userId, id, cancellationToken);

@@ -39,17 +39,14 @@ namespace IntegrationTests
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             string password = "hash";
+            string email = "email@mail.com";
+            DateTime now = DateTime.UtcNow;
             var hasherMock = new Mock<PasswordHasher<AppUser>>();
 
             var hasher = new PasswordHasher<AppUser>();
 
-            var user = new AppUser
-            {
-                Id = _userId,
-                Email = "email@mail.com",
-                CreatedAtUtc = DateTime.UtcNow,
-            };
-            user.PasswordHash = hasher.HashPassword(user, password);
+            var user = new AppUser(_userId, email, now);
+            user.SetPasswordHash(hasher.HashPassword(user, password));
 
             db.Users.Add(user);
 

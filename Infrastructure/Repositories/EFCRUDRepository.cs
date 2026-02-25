@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Infrastructure.Repositories
 {
-    public class CRUDRepository<T>(AppDbContext db) : ICRUDRepository<T>, IAsyncDisposable where T : class
+    public class EFCRUDRepository<T>(AppDbContext db) : IEFCRUDRepository<T>, IAsyncDisposable where T : class
     {
         protected readonly AppDbContext _db = db;
 
@@ -27,7 +27,7 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(int id, CancellationToken ct)
         {
-            var entity = await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
+            var entity = await _db.Set<T>().FindAsync([id], cancellationToken: ct);
             if (entity != null)
             {
                 _db.Set<T>().Remove(entity);
@@ -36,7 +36,7 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
-            var entity = await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
+            var entity = await _db.Set<T>().FindAsync([id], cancellationToken: ct);
             if (entity != null)
             {
                 _db.Set<T>().Remove(entity);
@@ -69,8 +69,8 @@ namespace Infrastructure.Repositories
 
         public Task<List<T>> GetAllAsync(CancellationToken ct) => _db.Set<T>().ToListAsync(ct);
 
-        public async Task<T?> GetByIdAsync(int id, CancellationToken ct) => await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
-        public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct) => await _db.Set<T>().FindAsync([id, ct], cancellationToken: ct);
+        public async Task<T?> GetByIdAsync(int id, CancellationToken ct) => await _db.Set<T>().FindAsync([id], cancellationToken: ct);
+        public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct) => await _db.Set<T>().FindAsync([id], cancellationToken: ct);
 
         public Task<List<T>> ListAsync(ISpecification<T> spec, CancellationToken ct) => ApplySpecification(spec).ToListAsync(ct);
 
@@ -126,14 +126,6 @@ namespace Infrastructure.Repositories
            SpecificationEvaluator<T>.GetQuery(_db.Set<T>().AsQueryable(), spec);
 
 
-
-        public IQueryable<TEntity> GetQuery<TEntity>() where TEntity : class => _db.Set<TEntity>();
-
-        public IQueryable<TEntity> GetQuery<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class =>
-                    _db.Set<TEntity>().Where(predicate);
-
-        public IQueryable<TEntity> GetQuery<TEntity>(ISpecification<TEntity> criteria) where TEntity : class =>
-             SpecificationEvaluator<TEntity>.GetQuery(_db.Set<TEntity>().AsQueryable(), criteria);
 
         public Task BeginTransactionAsync(CancellationToken cancellationToken) => _db.Database.BeginTransactionAsync(cancellationToken);
         public Task CommitTransactionAsync(CancellationToken cancellationToken) => _db.Database.CommitTransactionAsync(cancellationToken);

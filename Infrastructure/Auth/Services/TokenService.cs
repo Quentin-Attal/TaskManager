@@ -1,6 +1,5 @@
 ﻿using Application.Auth.Interfaces;
 using Application.Auth.Models;
-using Application.Repositories;
 using Domain.Entities;
 using Infrastructure.Auth.Options;
 using Microsoft.Extensions.Options;
@@ -8,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 
 namespace Infrastructure.Auth.Services
 {
@@ -63,9 +61,8 @@ namespace Infrastructure.Auth.Services
             return new JwtSecurityTokenHandler().WriteToken(jwtToken);
         }
 
-        public RefreshTokenDescriptor CreateRefreshToken()
+        public RefreshTokenDescriptor CreateRefreshToken(DateTime utcNow)
         {
-            var now = DateTime.UtcNow;
 
             var plain = TokenUtils.NewRefreshToken();
 
@@ -73,7 +70,7 @@ namespace Infrastructure.Auth.Services
             (
                 plain,
                 HashRefreshToken(plain),
-                now.AddDays(_jwt.RefreshTokenDays <= 0 ? 30 : _jwt.RefreshTokenDays)
+                utcNow.AddDays(_jwt.RefreshTokenDays <= 0 ? 30 : _jwt.RefreshTokenDays)
             );
         }
 

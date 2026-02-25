@@ -4,7 +4,7 @@ using Domain.Specification.Task;
 
 namespace Infrastructure.Repositories
 {
-    public class TaskRepository(ICRUDRepository<TaskItem> repository) : Repository<TaskItem>(repository), ITaskRepository
+    public class TaskRepository(IEFCRUDRepository<TaskItem> repository) : BaseRepository<TaskItem>(repository), ITaskRepository
     {
         public async Task<IEnumerable<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
         {

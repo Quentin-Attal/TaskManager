@@ -16,14 +16,8 @@ namespace Application.Tasks.Services
 
         public async Task<TaskItem> CreateAsync(Guid userId, string title, CancellationToken ct)
         {
-            var task = new TaskItem
-            {
-                Id = Guid.NewGuid(),
-                Title = title,
-                IsDone = false,
-                CreatedAtUtc = DateTime.UtcNow,
-                UserId = userId,
-            };
+            var now = DateTime.UtcNow;
+            var task = TaskItem.Create(userId, title, now);
 
             await _repo.AddAsync(task);
             await _repo.SaveChangesAsync(ct);
@@ -35,8 +29,7 @@ namespace Application.Tasks.Services
             var task = await _repo.GetByIdAsync(userId, id, ct);
             if (task is null) return false;
 
-            task.IsDone = true;
-            await _repo.UpdateAsync(task);
+            task.MarkDone();
             await _repo.SaveChangesAsync(ct);
             return true;
         }

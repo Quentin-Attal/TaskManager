@@ -84,7 +84,8 @@ namespace API.Controllers
                 string message = Error switch
                 {
                     AuthErrorCode.InvalidEmail => "Format email is wrong",
-                    AuthErrorCode.InvalidCredentials => "Password not match",
+                    AuthErrorCode.InvalidCredentials => "Wrong password",
+                    AuthErrorCode.PasswordNotMatch => "Password not match",
                     AuthErrorCode.PasswordTooWeak => "Password too weak",
                     AuthErrorCode.EmailAlreadyExists => "Email already exist",
                     _ => "Register failed",

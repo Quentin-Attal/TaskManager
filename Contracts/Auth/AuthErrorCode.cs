@@ -10,6 +10,7 @@ namespace Contracts.Auth
         InvalidCredentials = 1,
         InvalidEmail = 2,
         PasswordTooWeak = 3,
+        PasswordNotMatch = 4,
         EmailAlreadyExists = 5
     }
 }

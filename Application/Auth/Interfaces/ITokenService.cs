@@ -9,7 +9,7 @@ namespace Application.Auth.Interfaces
     public interface ITokenService
     {
         string CreateAccessToken(AppUser user);
-        RefreshTokenDescriptor CreateRefreshToken();
+        RefreshTokenDescriptor CreateRefreshToken(DateTime utcNow);
         string HashRefreshToken(string refreshTokenPlain);
     }
 
