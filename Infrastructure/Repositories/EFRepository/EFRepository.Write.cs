@@ -77,7 +77,7 @@ public partial class EFRepository<T>
         _db.Entry(entity).State = EntityState.Modified;
     }
 
-    public async void Update(List<T> entities)
+    public void Update(List<T> entities)
     {
         foreach (var e in entities)
             Update(e);

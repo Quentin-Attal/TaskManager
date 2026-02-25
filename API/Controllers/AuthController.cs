@@ -5,6 +5,7 @@ using Application.Auth.Services;
 using Application.Common;
 using Contracts.Auth;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -96,7 +97,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("refresh")]
+        [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(CancellationToken ct)
         {
             if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
@@ -112,6 +113,18 @@ namespace API.Controllers
                 var authResponse = new AuthResponse(authRefreshResult.AccessToken, null);
                 var response = ApiResponse<AuthResponse>
                     .SuccessResponse(authResponse, "Refresh sucessfully");
+                // update Cookie
+                Response.Cookies.Append("refresh_token",
+                    authRefreshResult.RefreshTokenPlain,
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Path = "/api/auth",
+                        Expires = DateTimeOffset.UtcNow.AddDays(30)
+                    }
+                );
                 return Ok(response);
             }
             else
@@ -123,7 +136,7 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpGet("logout")]
+        [HttpPost("logout")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
             var userId = User.GetUserId();

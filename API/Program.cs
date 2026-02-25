@@ -1,3 +1,4 @@
+using API.Common.Middleware;
 using API.Common.Serialization;
 using API.Mappings;
 using Application.Auth.Interfaces;
@@ -24,6 +25,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -121,6 +124,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseRateLimiter();
 app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

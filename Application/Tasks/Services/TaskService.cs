@@ -1,6 +1,7 @@
 ﻿using Application.Repositories;
 using Application.Tasks.Interfaces;
 using Domain.Entities;
+using Application.Common.Exceptions;
 
 namespace Application.Tasks.Services
 {
@@ -12,8 +13,11 @@ namespace Application.Tasks.Services
         public Task<List<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct)
             => _repo.GetAllAsync(userId, ct);
 
-        public Task<TaskItem?> GetByIdAsync(Guid userId, Guid id, CancellationToken ct)
-            => _repo.GetByIdAsync(userId, id, ct);
+        public async Task<TaskItem> GetByIdAsync(Guid userId, Guid id, CancellationToken ct)
+        {
+            var task = await _repo.GetByIdAsync(userId, id, ct) ?? throw new NotFoundException("Task not found", "TASK_NOT_FOUND");
+            return task;
+        }
 
         public async Task<TaskItem> CreateAsync(Guid userId, string title, CancellationToken ct)
         {
@@ -25,24 +29,18 @@ namespace Application.Tasks.Services
             return task;
         }
 
-        public async Task<bool> MarkDoneAsync(Guid userId, Guid id, CancellationToken ct)
+        public async Task MarkDoneAsync(Guid userId, Guid id, CancellationToken ct)
         {
-            var task = await _repo.GetByIdAsync(userId, id, ct);
-            if (task is null) return false;
-
+            var task = await _repo.GetByIdAsync(userId, id, ct) ?? throw new NotFoundException("Task not found", "TASK_NOT_FOUND");
             task.MarkDone();
             await _unitOfWork.SaveChangesAsync(ct);
-            return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid userId, Guid id, CancellationToken ct)
+        public async Task DeleteAsync(Guid userId, Guid id, CancellationToken ct)
         {
-            var existing = await _repo.GetByIdAsync(userId, id, ct);
-            if (existing is null) return false;
-
+            var existing = await _repo.GetByIdAsync(userId, id, ct) ?? throw new NotFoundException("Task not found", "TASK_NOT_FOUND");
             await _repo.DeleteAsync(userId, id, ct);
             await _unitOfWork.SaveChangesAsync(ct);
-            return true;
         }
     }
 }

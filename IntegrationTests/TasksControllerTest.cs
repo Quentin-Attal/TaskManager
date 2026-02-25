@@ -75,7 +75,7 @@ namespace IntegrationTests
             var createTaskRequest = new CreateTaskRequest { Title = "title" };
             var response = await _client.PostAsJsonAsync("/api/tasks", createTaskRequest, cancellationToken: cancellationToken);
 
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TaskAnswers>>(cancellationToken: cancellationToken);
 
@@ -94,18 +94,9 @@ namespace IntegrationTests
         {
             var cancellationToken = TestContext.Current.CancellationToken;
             _ = new CreateTaskRequest { Title = "title" };
-            var response = await _client.PutAsJsonAsync("/api/tasks/" + _taskId, new object(), cancellationToken: cancellationToken);
+            var response = await _client.PutAsJsonAsync("/api/tasks/" + _taskId + "/done", new object(), cancellationToken: cancellationToken);
 
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>(cancellationToken: cancellationToken);
-
-            apiResponse.Should().NotBeNull();
-            apiResponse.Success.Should().BeTrue();
-
-            apiResponse.Data.Should().BeTrue();
-
-            apiResponse.Message.Should().Be("Task marked as done successfully");
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
         [Fact]
@@ -115,16 +106,7 @@ namespace IntegrationTests
             _ = new CreateTaskRequest { Title = "title" };
             var response = await _client.DeleteAsync("/api/tasks/" + _taskId, cancellationToken: cancellationToken);
 
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>(cancellationToken: cancellationToken);
-
-            apiResponse.Should().NotBeNull();
-            apiResponse.Success.Should().BeTrue();
-
-            apiResponse.Data.Should().BeTrue();
-
-            apiResponse.Message.Should().Be("Task deleted successfully");
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
     }
 }

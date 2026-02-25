@@ -1,6 +1,11 @@
-﻿namespace Contracts.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class CreateTaskRequest
+namespace Contracts.Tasks;
+
+public sealed class CreateTaskRequest
 {
-    public string Title { get; set; } = "";
+    [Required]
+    [MinLength(1)]
+    [MaxLength(200)]
+    public string Title { get; init; } = "";
 }

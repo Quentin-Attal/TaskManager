@@ -37,24 +37,28 @@ namespace API.Controllers
             var answer = _mapper.Map<TaskAnswers>(task);
             var response = ApiResponse<TaskAnswers>
                 .SuccessResponse(answer, "Task created successfully");
-            return Ok(response);
+            return CreatedAtAction(nameof(GetById), new { id = task.Id }, response);
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, CancellationToken ct)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
         {
             var userId = User.GetUserId();
 
-            var task = await _service.MarkDoneAsync(userId, id, ct);
-            if (!task)
-            {
-                var errorResponse = ApiResponse<bool>
-                    .FailureResponse("Task not found");
-                return NotFound(errorResponse);
-            }
-            var response = ApiResponse<bool>
-                .SuccessResponse(task, "Task marked as done successfully");
+            var task = await _service.GetByIdAsync(userId, id, ct);
+            var answer = _mapper.Map<TaskAnswers>(task);
+            var response = ApiResponse<TaskAnswers>
+                 .SuccessResponse(answer, "Task retrieved successfully");
             return Ok(response);
+        }
+
+        [HttpPut("{id:guid}/done")]
+        public async Task<IActionResult> MarkDone(Guid id, CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+
+            await _service.MarkDoneAsync(userId, id, ct);
+            return NoContent();
         }
 
         [HttpDelete("{id:guid}")]
@@ -62,16 +66,8 @@ namespace API.Controllers
         {
             var userId = User.GetUserId();
 
-            var task = await _service.DeleteAsync(userId, id, ct);
-            if (!task)
-            {
-                var errorResponse = ApiResponse<TaskAnswers>
-                    .FailureResponse("Task not found");
-                return NotFound(errorResponse);
-            }
-            var response = ApiResponse<bool>
-                .SuccessResponse(task, "Task deleted successfully");
-            return Ok(response);
+            await _service.DeleteAsync(userId, id, ct);
+            return NoContent();
         }
     }
 }

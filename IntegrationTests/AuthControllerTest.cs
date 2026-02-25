@@ -204,11 +204,17 @@ namespace IntegrationTests
 
             setCookie.Should().NotBeNull();
 
-            using var refreshMessage = new HttpRequestMessage(HttpMethod.Get, "/api/auth/refresh");
+            using var refreshMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
             refreshMessage.Headers.Add("Cookie", setCookie!.Split(';')[0]);
 
             var refreshResponse = await _client.SendAsync(refreshMessage, ct);
             refreshResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var refreshSetCookie = refreshResponse.Headers.TryGetValues("Set-Cookie", out values)
+                   ? values.FirstOrDefault(v => v.StartsWith("refresh_token="))
+                   : null;
+
+            refreshSetCookie.Should().NotBeNull();
 
             var refreshApi = await refreshResponse.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>(cancellationToken: ct);
             refreshApi.Should().NotBeNull();
@@ -225,7 +231,7 @@ namespace IntegrationTests
         {
             var ct = TestContext.Current.CancellationToken;
 
-            var response = await _client.GetAsync("/api/auth/refresh", cancellationToken: ct);
+            var response = await _client.PostAsJsonAsync("/api/auth/refresh", new object(), cancellationToken: ct);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -234,7 +240,7 @@ namespace IntegrationTests
         {
             var ct = TestContext.Current.CancellationToken;
 
-            using var msg = new HttpRequestMessage(HttpMethod.Get, "/api/auth/refresh");
+            using var msg = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
             msg.Headers.Add("Cookie", "refresh_token=invalid_token_value");
 
             var response = await _client.SendAsync(msg, ct);
@@ -251,7 +257,7 @@ namespace IntegrationTests
         {
             var ct = TestContext.Current.CancellationToken;
 
-            using var msg = new HttpRequestMessage(HttpMethod.Get, "/api/auth/logout");
+            using var msg = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
             msg.Headers.Add("Cookie", "refresh_token=some_refresh_token");
 
             var response = await _client.SendAsync(msg, ct);

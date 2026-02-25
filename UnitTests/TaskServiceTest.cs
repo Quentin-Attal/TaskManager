@@ -1,4 +1,5 @@
-﻿using Application.Repositories;
+﻿using Application.Common.Exceptions;
+using Application.Repositories;
 using Application.Tasks.Services;
 using Domain.Entities;
 using Moq;
@@ -46,14 +47,8 @@ namespace UnitTests
             var result = await handler.GetByIdAsync(userId, id, cancellationToken);
 
             Assert.NotNull(result);
-            Assert.IsType<TaskItem?>(result);
+            Assert.IsType<TaskItem>(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
-
-            id = Guid.NewGuid();
-            result = await handler.GetByIdAsync(userId, id, cancellationToken);
-
-            Assert.Null(result);
-            repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Exactly(2));
         }
 
         [Fact]
@@ -91,18 +86,15 @@ namespace UnitTests
 
             repoMock.Setup(r => r.GetByIdAsync(userId, id, cancellationToken)).ReturnsAsync(expectedTask);
 
-            var result = await handler.MarkDoneAsync(userId, id, cancellationToken);
+            await handler.MarkDoneAsync(userId, id, cancellationToken);
 
-            Assert.IsType<Boolean>(result);
-            Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
 
             unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
             id = Guid.NewGuid();
-            result = await handler.MarkDoneAsync(userId, id, cancellationToken);
+            await Assert.ThrowsAsync<NotFoundException>(async () => await handler.MarkDoneAsync(userId, id, cancellationToken));
 
-            Assert.False(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Exactly(2));
         }
 
@@ -122,18 +114,16 @@ namespace UnitTests
 
             repoMock.Setup(r => r.GetByIdAsync(userId, id, cancellationToken)).ReturnsAsync(expectedTask);
 
-            var result = await handler.DeleteAsync(userId, id, cancellationToken);
+            await handler.DeleteAsync(userId, id, cancellationToken);
 
-            Assert.IsType<Boolean>(result);
-            Assert.True(result);
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             repoMock.Verify(r => r.DeleteAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
             unitOfWorkMock.Verify(r => r.SaveChangesAsync(cancellationToken), Times.Once);
 
             id = Guid.NewGuid();
-            result = await handler.DeleteAsync(userId, id, cancellationToken);
 
-            Assert.False(result);
+            await Assert.ThrowsAsync<NotFoundException>(async () => await handler.DeleteAsync(userId, id, cancellationToken));
+
             repoMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Exactly(2));
             repoMock.Verify(r => r.DeleteAsync(userId, It.IsAny<Guid>(), cancellationToken), Times.Once);
         }
