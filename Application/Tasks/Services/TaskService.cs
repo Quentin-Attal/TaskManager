@@ -39,7 +39,7 @@ namespace Application.Tasks.Services
         public async Task DeleteAsync(Guid userId, Guid id, CancellationToken ct)
         {
             var existing = await _repo.GetByIdAsync(userId, id, ct) ?? throw new NotFoundException("Task not found", "TASK_NOT_FOUND");
-            await _repo.DeleteAsync(userId, id, ct);
+            await _repo.DeleteAsync(existing.Id, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }

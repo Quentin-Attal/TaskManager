@@ -5,6 +5,5 @@ namespace Application.Repositories
     {
         Task<List<TaskItem>> GetAllAsync(Guid userId, CancellationToken ct);
         Task<TaskItem?> GetByIdAsync(Guid userId, Guid id, CancellationToken ct);
-        Task DeleteAsync(Guid userId, Guid id, CancellationToken ct);
     }
 }

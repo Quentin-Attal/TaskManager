@@ -17,14 +17,5 @@ namespace Infrastructure.Repositories
         {
             return await _crud.SingleOrDefaultAsync(new TaskByUserAndIdSpecification(userId, id), QueryOptions.Default, ct);
         }
-
-
-        public async Task DeleteAsync(Guid userId, Guid id, CancellationToken ct)
-        {
-            var task = await GetByIdAsync(userId, id, ct);
-            if (task != null)
-                _crud.Delete(task);
-        }
-
     }
 }
